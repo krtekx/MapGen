@@ -1,0 +1,19 @@
+{
+  "name": "mapgen",
+  "version": "1.0.0",
+  "main": "script.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "track": "node antigravity-tracker/tracker.cjs",
+    "track:stop": "taskkill /F /IM node.exe /FI \"WINDOWTITLE eq tracker.cjs\" || echo No tracking process found"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "chokidar": "^4.0.3",
+    "readdirp": "^4.1.2"
+  },
+  "devDependencies": {},
+  "keywords": [],
+  "description": ""
+}

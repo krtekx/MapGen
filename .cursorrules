@@ -1,0 +1,8 @@
+You must update the version number in `package.json` and `public/production.json` after every single prompt where you make code changes.
+Increment the patch version (e.g., 3.0.7 -> 3.0.8) for small changes, minor version (e.g., 3.0.0 -> 3.1.0) for new features, and major version (e.g., 3.0.0 -> 4.0.0) for breaking changes.
+Track our production time. Use our track-time.js script to do this.
+start the script always when antigravity start working on this project.
+stop the script always when antigravity stop working on this project.
+always reload the page when you make changes to the code.
+Deploy to GitHub Pages every 5 prompts with a minor version bump (e.g., 3.2.0 -> 3.3.0). Run: git add ., git commit -m "Deploy v{version}", git push, npm run deploy.
+For new projects, configure Git with: git config --global user.email "radim.petruska@gmail.com" and git config --global user.name "krtekx".
