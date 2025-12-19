@@ -28,12 +28,12 @@ const state = {
     vectorData: null, // Stores GeoJSON
     vectorLayers: {}, // Stores Leaflet Layer references
     activeLayers: {
-        streets: { visible: true, stroke: '#333333', width: 1, fill: '#ffffff', fillEnabled: false, hatched: false, labelsEnabled: false, laserMode: 'score', power: 20, speed: 100 },
-        water: { visible: true, stroke: '#3b82f6', width: 1, fill: '#3b82f6', fillEnabled: false, hatched: false, laserMode: 'engrave', power: 15, speed: 150 },
+        streets: { visible: true, stroke: '#333333', width: 1, fill: '#ffffff', fillEnabled: false, hatched: false, hatchStyle: 'lines', hatchScale: 1, hatchRotation: 45, labelsEnabled: false, laserMode: 'score', power: 20, speed: 100 },
+        water: { visible: true, stroke: '#3b82f6', width: 1, fill: '#3b82f6', fillEnabled: false, hatched: false, hatchStyle: 'lines', hatchScale: 1, hatchRotation: 45, laserMode: 'engrave', power: 15, speed: 150 },
         buildings: { visible: true, stroke: '#64748b', width: 1, fill: '#64748b', fillEnabled: true, hatched: false, hatchStyle: 'lines', hatchScale: 1, hatchRotation: 45, laserMode: 'engrave', power: 10, speed: 200 },
         parks: { visible: true, stroke: '#22c55e', width: 0, fill: '#22c55e', fillEnabled: true, hatched: false, hatchStyle: 'lines', hatchScale: 1, hatchRotation: 45, laserMode: 'engrave', power: 10, speed: 200 },
-        railways: { visible: true, stroke: '#475569', width: 1.5, fill: '#000000', fillEnabled: false, hatched: false, laserMode: 'score', power: 30, speed: 80 },
-        industrial: { visible: false, stroke: '#94a3b8', width: 0.5, fill: '#cbd5e1', fillEnabled: false, hatched: false, laserMode: 'engrave', power: 10, speed: 200 },
+        railways: { visible: true, stroke: '#475569', width: 1.5, fill: '#000000', fillEnabled: false, hatched: false, hatchStyle: 'lines', hatchScale: 1, hatchRotation: 45, laserMode: 'score', power: 30, speed: 80 },
+        industrial: { visible: false, stroke: '#94a3b8', width: 0.5, fill: '#cbd5e1', fillEnabled: false, hatched: false, hatchStyle: 'lines', hatchScale: 1, hatchRotation: 45, laserMode: 'engrave', power: 10, speed: 200 },
         parking: { visible: false, stroke: '#94a3b8', width: 0.5, fill: '#e2e8f0', fillEnabled: true, hatched: false, hatchStyle: 'lines', hatchScale: 1, hatchRotation: 45, laserMode: 'engrave', power: 10, speed: 200 }
     },
     settings: {
@@ -372,36 +372,63 @@ function setupControls() {
         if (fillEnabledBtn) fillEnabledBtn.addEventListener('change', updateStyle);
 
         const hatchedBtn = document.getElementById(`layer-${layer}-hatched`);
+        const hatchTrigger = document.getElementById(`layer-${layer}-hatch-trigger`);
+        const hatchSettings = document.getElementById(`layer-${layer}-hatch-settings`);
+
         if (hatchedBtn) {
-            const hatchSettings = document.getElementById(`layer-${layer}-hatch-settings`);
             hatchedBtn.addEventListener('change', (e) => {
                 state.activeLayers[layer].hatched = e.target.checked;
-                if (hatchSettings) {
-                    hatchSettings.classList.toggle('visible', e.target.checked);
+                // Auto-show settings if checked for the first time? 
+                // Let's keep it manual via the button to save space, 
+                // OR auto-open if the user explicitly checks it.
+                if (e.target.checked && hatchSettings && !hatchSettings.classList.contains('visible')) {
+                    hatchSettings.classList.add('visible');
                 }
-                updateStyle(); // This calls debouncedRenderVectorLayers
+                updateStyle();
             });
-            if (hatchSettings && hatchedBtn.checked) {
-                hatchSettings.classList.add('visible');
-            }
         }
 
-        // Hatch Patterns
+        if (hatchTrigger && hatchSettings) {
+            hatchTrigger.addEventListener('click', () => {
+                hatchSettings.classList.toggle('visible');
+            });
+        }
+
+        // Hatch Patterns - Sync Range and Number inputs
         ['hatch-style', 'hatch-scale', 'hatch-rotation'].forEach(prop => {
-            const el = document.getElementById(`layer-${layer}-${prop}`);
-            if (el) {
-                el.addEventListener('input', (e) => {
+            const rawProp = `layer-${layer}-${prop}`;
+            const el = document.getElementById(rawProp);
+
+            // Sync logic for scale/rotation
+            if (prop === 'hatch-scale' || prop === 'hatch-rotation') {
+                const rangeInput = document.getElementById(rawProp);
+                const numInput = document.getElementById(rawProp + '-num'); // e.g. layer-buildings-hatch-scale-num
+
+                const syncAndUpdate = (val) => {
                     const camelProp = prop.replace(/-([a-z])/g, (g) => g[1].toUpperCase());
-                    state.activeLayers[layer][camelProp] = e.target.value;
-
-                    // Update value display if exists
-                    const valEl = document.getElementById(`layer-${layer}-${prop}-val`);
-                    if (valEl) {
-                        valEl.innerText = e.target.value + (prop === 'hatch-rotation' ? '°' : '');
-                    }
-
+                    state.activeLayers[layer][camelProp] = val;
                     debouncedRenderVectorLayers();
-                });
+                };
+
+                if (rangeInput && numInput) {
+                    rangeInput.addEventListener('input', (e) => {
+                        numInput.value = e.target.value;
+                        syncAndUpdate(e.target.value);
+                    });
+                    numInput.addEventListener('input', (e) => {
+                        rangeInput.value = e.target.value;
+                        syncAndUpdate(e.target.value);
+                    });
+                }
+            } else {
+                // Style select
+                if (el) {
+                    el.addEventListener('input', (e) => {
+                        const camelProp = prop.replace(/-([a-z])/g, (g) => g[1].toUpperCase());
+                        state.activeLayers[layer][camelProp] = e.target.value;
+                        debouncedRenderVectorLayers();
+                    });
+                }
             }
         });
 

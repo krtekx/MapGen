@@ -139,6 +139,15 @@
                         <div class="layer-hatch-col">
                             <input type="checkbox" id="layer-buildings-hatched" class="compact-check"
                                 title="Use Pattern">
+                            <button id="layer-buildings-hatch-trigger" class="hatch-settings-trigger" title="Settings">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                    <path
+                                        d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+                                    </path>
+                                </svg>
+                            </button>
                         </div>
                         <div class="layer-laser-col">
                             <select id="layer-buildings-laser-mode" class="input-compact mini-select"
@@ -152,30 +161,44 @@
                             <input type="number" id="layer-buildings-speed" value="200" class="input-compact mini-num"
                                 title="Speed">
                         </div>
-                        <!-- Hatch Settings (Hidden by default, shown by JS when hatched checked) -->
+
                         <div id="layer-buildings-hatch-settings" class="layer-extended-settings">
-                            <div class="input-group">
-                                <label>Pattern</label>
-                                <select id="layer-buildings-hatch-style" class="input-compact">
-                                    <option value="lines">Diagonal (R)</option>
-                                    <option value="lines-left">Diagonal (L)</option>
+                            <div class="hatch-row-full">
+                                <label>Pattern Style</label>
+                                <select id="layer-buildings-hatch-style" class="input-compact full-width-select">
+                                    <option value="lines">Diagonal (Right)</option>
+                                    <option value="lines-left">Diagonal (Left)</option>
                                     <option value="horizontal">Horizontal</option>
                                     <option value="vertical">Vertical</option>
-                                    <option value="grid">Grid</option>
+                                    <option value="grid">Grid (Square)</option>
                                     <option value="crosshatch">Crosshatch</option>
-                                    <option value="dots">Dots</option>
-                                    <option value="bricks">Bricks</option>
+                                    <option value="dots">Dots (Small)</option>
+                                    <option value="dots-large">Dots (Large)</option>
                                     <option value="hexagons">Hexagons</option>
+                                    <option value="bricks">Bricks</option>
+                                    <option value="waves">Waves</option>
+                                    <option value="zigzag">Zigzag</option>
+                                    <option value="dashed">Dashed Lines</option>
+                                    <option value="stars">Stars</option>
+                                    <option value="squares">Squares</option>
                                 </select>
                             </div>
-                            <div class="input-group">
-                                <label>Scale/Rot</label>
-                                <div class="row-inputs">
-                                    <input type="range" id="layer-buildings-hatch-scale" min="0.5" max="5" step="0.1"
-                                        value="1" style="width:50px">
-                                    <span id="layer-buildings-hatch-scale-val" style="font-size:0.7em;">1.0</span>
+                            <div class="hatch-row-full">
+                                <label>Scale</label>
+                                <div class="slider-with-input">
+                                    <input type="range" id="layer-buildings-hatch-scale" min="0.1" max="5" step="0.1"
+                                        value="1" class="full-width-slider">
+                                    <input type="number" id="layer-buildings-hatch-scale-num" value="1" step="0.1"
+                                        class="input-compact mini-num">
+                                </div>
+                            </div>
+                            <div class="hatch-row-full">
+                                <label>Rotation</label>
+                                <div class="slider-with-input">
                                     <input type="range" id="layer-buildings-hatch-rotation" min="0" max="180" step="1"
-                                        value="45" style="width:50px">
+                                        value="45" class="full-width-slider">
+                                    <input type="number" id="layer-buildings-hatch-rotation-num" value="45" step="1"
+                                        class="input-compact mini-num">
                                 </div>
                             </div>
                         </div>
@@ -195,10 +218,16 @@
                         <div class="layer-fill-col">
                             <input type="color" id="layer-water-fill" value="#3b82f6" class="mini-color">
                             <input type="checkbox" id="layer-water-fill-enabled" class="compact-check">
-                            <!-- Default Off -->
                         </div>
                         <div class="layer-hatch-col">
-                            <!-- Water usually no hatch, but keep consistency? -->
+                            <input type="checkbox" id="layer-water-hatched" class="compact-check">
+                            <button id="layer-water-hatch-trigger" class="hatch-settings-trigger"><svg width="12"
+                                    height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                    <path
+                                        d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+                                    </path>
+                                </svg></button>
                         </div>
                         <div class="layer-laser-col">
                             <select id="layer-water-laser-mode" class="input-compact mini-select" style="width:40px;">
@@ -208,6 +237,38 @@
                             </select>
                             <input type="number" id="layer-water-power" value="15" class="input-compact mini-num">
                             <input type="number" id="layer-water-speed" value="150" class="input-compact mini-num">
+                        </div>
+                        <div id="layer-water-hatch-settings" class="layer-extended-settings">
+                            <div class="hatch-row-full">
+                                <label>Pattern Style</label>
+                                <select id="layer-water-hatch-style" class="input-compact full-width-select">
+                                    <option value="lines">Diagonal (Right)</option>
+                                    <option value="lines-left">Diagonal (Left)</option>
+                                    <option value="horizontal">Horizontal</option>
+                                    <option value="vertical">Vertical</option>
+                                    <option value="waves">Waves</option>
+                                    <option value="grid">Grid</option>
+                                    <option value="dots">Dots</option>
+                                </select>
+                            </div>
+                            <div class="hatch-row-full">
+                                <label>Scale</label>
+                                <div class="slider-with-input">
+                                    <input type="range" id="layer-water-hatch-scale" min="0.1" max="5" step="0.1"
+                                        value="1" class="full-width-slider">
+                                    <input type="number" id="layer-water-hatch-scale-num" value="1" step="0.1"
+                                        class="input-compact mini-num">
+                                </div>
+                            </div>
+                            <div class="hatch-row-full">
+                                <label>Rotation</label>
+                                <div class="slider-with-input">
+                                    <input type="range" id="layer-water-hatch-rotation" min="0" max="180" step="1"
+                                        value="45" class="full-width-slider">
+                                    <input type="number" id="layer-water-hatch-rotation-num" value="45" step="1"
+                                        class="input-compact mini-num">
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -223,7 +284,9 @@
                                 class="input-compact mini-num">
                         </div>
                         <div class="layer-fill-col">
-                            <!-- Streets usually just stroke -->
+                            <!-- Streets Fill (Disabled by default typically, but consistent UI) -->
+                            <input type="color" id="layer-streets-fill" value="#ffffff" class="mini-color">
+                            <input type="checkbox" id="layer-streets-fill-enabled" class="compact-check">
                         </div>
                         <div class="layer-hatch-col">
                             <input type="checkbox" id="layer-streets-labels" class="compact-check" title="Show Labels">
@@ -257,6 +320,13 @@
                         </div>
                         <div class="layer-hatch-col">
                             <input type="checkbox" id="layer-parks-hatched" class="compact-check">
+                            <button id="layer-parks-hatch-trigger" class="hatch-settings-trigger"><svg width="12"
+                                    height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                    <path
+                                        d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+                                    </path>
+                                </svg></button>
                         </div>
                         <div class="layer-laser-col">
                             <select id="layer-parks-laser-mode" class="input-compact mini-select" style="width:40px;">
@@ -268,22 +338,42 @@
                             <input type="number" id="layer-parks-speed" value="200" class="input-compact mini-num">
                         </div>
                         <div id="layer-parks-hatch-settings" class="layer-extended-settings">
-                            <div class="input-group">
-                                <label>Pattern</label>
-                                <select id="layer-parks-hatch-style" class="input-compact">
-                                    <option value="lines">Diagonal</option>
+                            <div class="hatch-row-full">
+                                <label>Pattern Style</label>
+                                <select id="layer-parks-hatch-style" class="input-compact full-width-select">
+                                    <option value="lines">Diagonal (Right)</option>
+                                    <option value="lines-left">Diagonal (Left)</option>
+                                    <option value="horizontal">Horizontal</option>
+                                    <option value="vertical">Vertical</option>
+                                    <option value="grid">Grid (Square)</option>
                                     <option value="crosshatch">Crosshatch</option>
-                                    <option value="dots">Dots</option>
+                                    <option value="dots">Dots (Small)</option>
+                                    <option value="dots-large">Dots (Large)</option>
+                                    <option value="hexagons">Hexagons</option>
+                                    <option value="bricks">Bricks</option>
                                     <option value="waves">Waves</option>
+                                    <option value="zigzag">Zigzag</option>
+                                    <option value="dashed">Dashed Lines</option>
+                                    <option value="stars">Stars</option>
+                                    <option value="squares">Squares</option>
                                 </select>
                             </div>
-                            <div class="input-group">
-                                <label>Scale/Rot</label>
-                                <div class="row-inputs">
-                                    <input type="range" id="layer-parks-hatch-scale" min="0.5" max="5" step="0.1"
-                                        value="1" style="width:50px">
+                            <div class="hatch-row-full">
+                                <label>Scale</label>
+                                <div class="slider-with-input">
+                                    <input type="range" id="layer-parks-hatch-scale" min="0.1" max="5" step="0.1"
+                                        value="1" class="full-width-slider">
+                                    <input type="number" id="layer-parks-hatch-scale-num" value="1" step="0.1"
+                                        class="input-compact mini-num">
+                                </div>
+                            </div>
+                            <div class="hatch-row-full">
+                                <label>Rotation</label>
+                                <div class="slider-with-input">
                                     <input type="range" id="layer-parks-hatch-rotation" min="0" max="180" step="1"
-                                        value="45" style="width:50px">
+                                        value="45" class="full-width-slider">
+                                    <input type="number" id="layer-parks-hatch-rotation-num" value="45" step="1"
+                                        class="input-compact mini-num">
                                 </div>
                             </div>
                         </div>
@@ -301,10 +391,19 @@
                                 class="input-compact mini-num">
                         </div>
                         <div class="layer-fill-col">
-                            <!-- N/A -->
+                            <input type="color" id="layer-railways-fill" value="#000000" class="mini-color">
+                            <input type="checkbox" id="layer-railways-fill-enabled" class="compact-check">
                         </div>
                         <div class="layer-hatch-col">
-                            <!-- N/A -->
+                            <!-- Hatch usually unwanted for rails lines, but requested for ALL -->
+                            <input type="checkbox" id="layer-railways-hatched" class="compact-check">
+                            <button id="layer-railways-hatch-trigger" class="hatch-settings-trigger"><svg width="12"
+                                    height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                    <path
+                                        d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+                                    </path>
+                                </svg></button>
                         </div>
                         <div class="layer-laser-col">
                             <select id="layer-railways-laser-mode" class="input-compact mini-select"
@@ -314,6 +413,34 @@
                             </select>
                             <input type="number" id="layer-railways-power" value="30" class="input-compact mini-num">
                             <input type="number" id="layer-railways-speed" value="80" class="input-compact mini-num">
+                        </div>
+                        <div id="layer-railways-hatch-settings" class="layer-extended-settings">
+                            <div class="hatch-row-full">
+                                <label>Pattern Style</label>
+                                <select id="layer-railways-hatch-style" class="input-compact full-width-select">
+                                    <option value="lines">Diagonal (Right)</option>
+                                    <option value="crosshatch">Crosshatch</option>
+                                    <option value="dashed">Dashed Lines</option>
+                                </select>
+                            </div>
+                            <div class="hatch-row-full">
+                                <label>Scale</label>
+                                <div class="slider-with-input">
+                                    <input type="range" id="layer-railways-hatch-scale" min="0.1" max="5" step="0.1"
+                                        value="1" class="full-width-slider">
+                                    <input type="number" id="layer-railways-hatch-scale-num" value="1" step="0.1"
+                                        class="input-compact mini-num">
+                                </div>
+                            </div>
+                            <div class="hatch-row-full">
+                                <label>Rotation</label>
+                                <div class="slider-with-input">
+                                    <input type="range" id="layer-railways-hatch-rotation" min="0" max="180" step="1"
+                                        value="45" class="full-width-slider">
+                                    <input type="number" id="layer-railways-hatch-rotation-num" value="45" step="1"
+                                        class="input-compact mini-num">
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -329,12 +456,18 @@
                                 class="input-compact mini-num">
                         </div>
                         <div class="layer-fill-col">
-                            <!-- N/A in default but can be added if needed, sticking to old UI logic -->
-                            <!-- Old UI didn't have fill for Ind? Wait, line 32 in main.js says fill: #cbd5e1, fillEnabled: false. -->
                             <input type="color" id="layer-industrial-fill" value="#cbd5e1" class="mini-color">
                             <input type="checkbox" id="layer-industrial-fill-enabled" class="compact-check">
                         </div>
                         <div class="layer-hatch-col">
+                            <input type="checkbox" id="layer-industrial-hatched" class="compact-check">
+                            <button id="layer-industrial-hatch-trigger" class="hatch-settings-trigger"><svg width="12"
+                                    height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                    <path
+                                        d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+                                    </path>
+                                </svg></button>
                         </div>
                         <div class="layer-laser-col">
                             <select id="layer-industrial-laser-mode" class="input-compact mini-select"
@@ -344,6 +477,46 @@
                             </select>
                             <input type="number" id="layer-industrial-power" value="10" class="input-compact mini-num">
                             <input type="number" id="layer-industrial-speed" value="200" class="input-compact mini-num">
+                        </div>
+                        <div id="layer-industrial-hatch-settings" class="layer-extended-settings">
+                            <div class="hatch-row-full">
+                                <label>Pattern Style</label>
+                                <select id="layer-industrial-hatch-style" class="input-compact full-width-select">
+                                    <option value="lines">Diagonal (Right)</option>
+                                    <option value="lines-left">Diagonal (Left)</option>
+                                    <option value="horizontal">Horizontal</option>
+                                    <option value="vertical">Vertical</option>
+                                    <option value="grid">Grid (Square)</option>
+                                    <option value="crosshatch">Crosshatch</option>
+                                    <option value="dots">Dots (Small)</option>
+                                    <option value="dots-large">Dots (Large)</option>
+                                    <option value="hexagons">Hexagons</option>
+                                    <option value="bricks">Bricks</option>
+                                    <option value="waves">Waves</option>
+                                    <option value="zigzag">Zigzag</option>
+                                    <option value="dashed">Dashed Lines</option>
+                                    <option value="stars">Stars</option>
+                                    <option value="squares">Squares</option>
+                                </select>
+                            </div>
+                            <div class="hatch-row-full">
+                                <label>Scale</label>
+                                <div class="slider-with-input">
+                                    <input type="range" id="layer-industrial-hatch-scale" min="0.1" max="5" step="0.1"
+                                        value="1" class="full-width-slider">
+                                    <input type="number" id="layer-industrial-hatch-scale-num" value="1" step="0.1"
+                                        class="input-compact mini-num">
+                                </div>
+                            </div>
+                            <div class="hatch-row-full">
+                                <label>Rotation</label>
+                                <div class="slider-with-input">
+                                    <input type="range" id="layer-industrial-hatch-rotation" min="0" max="180" step="1"
+                                        value="45" class="full-width-slider">
+                                    <input type="number" id="layer-industrial-hatch-rotation-num" value="45" step="1"
+                                        class="input-compact mini-num">
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -364,6 +537,13 @@
                         </div>
                         <div class="layer-hatch-col">
                             <input type="checkbox" id="layer-parking-hatched" class="compact-check">
+                            <button id="layer-parking-hatch-trigger" class="hatch-settings-trigger"><svg width="12"
+                                    height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                    <path
+                                        d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+                                    </path>
+                                </svg></button>
                         </div>
                         <div class="layer-laser-col">
                             <select id="layer-parking-laser-mode" class="input-compact mini-select" style="width:40px;">
@@ -374,20 +554,42 @@
                             <input type="number" id="layer-parking-speed" value="200" class="input-compact mini-num">
                         </div>
                         <div id="layer-parking-hatch-settings" class="layer-extended-settings">
-                            <div class="input-group">
-                                <label>Pattern</label>
-                                <select id="layer-parking-hatch-style" class="input-compact">
-                                    <option value="lines">Diagonal</option>
-                                    <option value="grid">Grid</option>
+                            <div class="hatch-row-full">
+                                <label>Pattern Style</label>
+                                <select id="layer-parking-hatch-style" class="input-compact full-width-select">
+                                    <option value="lines">Diagonal (Right)</option>
+                                    <option value="lines-left">Diagonal (Left)</option>
+                                    <option value="horizontal">Horizontal</option>
+                                    <option value="vertical">Vertical</option>
+                                    <option value="grid">Grid (Square)</option>
+                                    <option value="crosshatch">Crosshatch</option>
+                                    <option value="dots">Dots (Small)</option>
+                                    <option value="dots-large">Dots (Large)</option>
+                                    <option value="hexagons">Hexagons</option>
+                                    <option value="bricks">Bricks</option>
+                                    <option value="waves">Waves</option>
+                                    <option value="zigzag">Zigzag</option>
+                                    <option value="dashed">Dashed Lines</option>
+                                    <option value="stars">Stars</option>
+                                    <option value="squares">Squares</option>
                                 </select>
                             </div>
-                            <div class="input-group">
-                                <label>Scale/Rot</label>
-                                <div class="row-inputs">
-                                    <input type="range" id="layer-parking-hatch-scale" min="0.5" max="5" step="0.1"
-                                        value="1" style="width:50px">
+                            <div class="hatch-row-full">
+                                <label>Scale</label>
+                                <div class="slider-with-input">
+                                    <input type="range" id="layer-parking-hatch-scale" min="0.1" max="5" step="0.1"
+                                        value="1" class="full-width-slider">
+                                    <input type="number" id="layer-parking-hatch-scale-num" value="1" step="0.1"
+                                        class="input-compact mini-num">
+                                </div>
+                            </div>
+                            <div class="hatch-row-full">
+                                <label>Rotation</label>
+                                <div class="slider-with-input">
                                     <input type="range" id="layer-parking-hatch-rotation" min="0" max="180" step="1"
-                                        value="45" style="width:50px">
+                                        value="45" class="full-width-slider">
+                                    <input type="number" id="layer-parking-hatch-rotation-num" value="45" step="1"
+                                        class="input-compact mini-num">
                                 </div>
                             </div>
                         </div>
