@@ -28,13 +28,13 @@ const state = {
     vectorData: null, // Stores GeoJSON
     vectorLayers: {}, // Stores Leaflet Layer references
     activeLayers: {
-        streets: { visible: true, stroke: '#333333', width: 1, fill: '#ffffff', fillEnabled: false, hatched: false, hatchStyle: 'lines', hatchScale: 1, hatchRotation: 45, labelsEnabled: false, laserMode: 'score', power: 20, speed: 100 },
-        water: { visible: true, stroke: '#3b82f6', width: 1, fill: '#3b82f6', fillEnabled: false, hatched: false, hatchStyle: 'lines', hatchScale: 1, hatchRotation: 45, laserMode: 'engrave', power: 15, speed: 150 },
-        buildings: { visible: true, stroke: '#64748b', width: 1, fill: '#64748b', fillEnabled: true, hatched: false, hatchStyle: 'lines', hatchScale: 1, hatchRotation: 45, laserMode: 'engrave', power: 10, speed: 200 },
-        parks: { visible: true, stroke: '#22c55e', width: 0, fill: '#22c55e', fillEnabled: true, hatched: false, hatchStyle: 'lines', hatchScale: 1, hatchRotation: 45, laserMode: 'engrave', power: 10, speed: 200 },
-        railways: { visible: true, stroke: '#475569', width: 1.5, fill: '#000000', fillEnabled: false, hatched: false, hatchStyle: 'lines', hatchScale: 1, hatchRotation: 45, laserMode: 'score', power: 30, speed: 80 },
-        industrial: { visible: false, stroke: '#94a3b8', width: 0.5, fill: '#cbd5e1', fillEnabled: false, hatched: false, hatchStyle: 'lines', hatchScale: 1, hatchRotation: 45, laserMode: 'engrave', power: 10, speed: 200 },
-        parking: { visible: false, stroke: '#94a3b8', width: 0.5, fill: '#e2e8f0', fillEnabled: true, hatched: false, hatchStyle: 'lines', hatchScale: 1, hatchRotation: 45, laserMode: 'engrave', power: 10, speed: 200 }
+        streets: { visible: true, stroke: '#333333', width: 1, fill: '#ffffff', fillEnabled: false, hatched: false, hatchStyle: 'lines', hatchScale: 1, hatchRotation: 45, hatchColor: '#000000', hatchWidth: 0.5, labelsEnabled: false, laserMode: 'score', power: 20, speed: 100 },
+        water: { visible: true, stroke: '#3b82f6', width: 1, fill: '#3b82f6', fillEnabled: false, hatched: false, hatchStyle: 'lines', hatchScale: 1, hatchRotation: 45, hatchColor: '#000000', hatchWidth: 0.5, laserMode: 'engrave', power: 15, speed: 150 },
+        buildings: { visible: true, stroke: '#64748b', width: 1, fill: '#64748b', fillEnabled: true, hatched: false, hatchStyle: 'lines', hatchScale: 1, hatchRotation: 45, hatchColor: '#000000', hatchWidth: 0.5, laserMode: 'engrave', power: 10, speed: 200 },
+        parks: { visible: true, stroke: '#22c55e', width: 0, fill: '#22c55e', fillEnabled: true, hatched: false, hatchStyle: 'lines', hatchScale: 1, hatchRotation: 45, hatchColor: '#000000', hatchWidth: 0.5, laserMode: 'engrave', power: 10, speed: 200 },
+        railways: { visible: true, stroke: '#475569', width: 1.5, fill: '#000000', fillEnabled: false, hatched: false, hatchStyle: 'lines', hatchScale: 1, hatchRotation: 45, hatchColor: '#000000', hatchWidth: 0.5, laserMode: 'score', power: 30, speed: 80 },
+        industrial: { visible: false, stroke: '#94a3b8', width: 0.5, fill: '#cbd5e1', fillEnabled: false, hatched: false, hatchStyle: 'lines', hatchScale: 1, hatchRotation: 45, hatchColor: '#000000', hatchWidth: 0.5, laserMode: 'engrave', power: 10, speed: 200 },
+        parking: { visible: false, stroke: '#94a3b8', width: 0.5, fill: '#e2e8f0', fillEnabled: true, hatched: false, hatchStyle: 'lines', hatchScale: 1, hatchRotation: 45, hatchColor: '#000000', hatchWidth: 0.5, laserMode: 'engrave', power: 10, speed: 200 }
     },
     settings: {
         fontFamily: "'Outfit', sans-serif",
@@ -232,8 +232,22 @@ function setupControls() {
     });
 
     // Map Style
-    document.getElementById('map-style-select').addEventListener('change', (e) => {
-        setMapStyle(e.target.value);
+    // Map Style Buttons
+    const styleBtns = document.querySelectorAll('.style-btn');
+    const syncMapStyleUI = (val) => {
+        styleBtns.forEach(b => {
+            if (b.dataset.val === val) b.classList.add('active');
+            else b.classList.remove('active');
+        });
+    };
+
+    styleBtns.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const val = e.target.dataset.val;
+            state.settings.mapStyle = val;
+            syncMapStyleUI(val);
+            setMapStyle(val);
+        });
     });
 
     // Dimensions & Shape
@@ -248,8 +262,8 @@ function setupControls() {
 
     radiusInput.addEventListener('input', (e) => {
         const mm = e.target.value;
-        const px = mm * state.mmToPx;
-        document.getElementById('map-wrapper').style.borderRadius = `${px}px`;
+        state.settings.mapRadius = parseFloat(mm);
+        document.getElementById('map-wrapper').style.borderRadius = `${mm}mm`;
     });
 
     // Presets (Dimensions)
@@ -292,14 +306,17 @@ function setupControls() {
     // Vector Layers Controls
     const vectorToggle = document.getElementById('vector-mode-toggle');
     const layerList = document.getElementById('layer-toggles');
-    const styleSelect = document.getElementById('map-style-select');
     const exportBtn = document.getElementById('export-btn');
     const layers = ['buildings', 'water', 'streets', 'parks', 'railways', 'industrial', 'parking'];
 
     const updateUIState = () => {
+        const styleGrid = document.getElementById('map-style-grid');
         if (state.vectorMode) {
             layerList.classList.remove('disabled');
-            styleSelect.disabled = true;
+            if (styleGrid) {
+                styleGrid.style.pointerEvents = 'none';
+                styleGrid.style.opacity = '0.5';
+            }
             exportBtn.disabled = false;
             exportBtn.innerText = "Export Laser (SVG)";
 
@@ -312,16 +329,19 @@ function setupControls() {
 
         } else {
             layerList.classList.add('disabled');
-            styleSelect.disabled = false;
-            exportBtn.disabled = true;
-            exportBtn.innerText = "Export Bitmap (SVG)";
+            if (styleGrid) {
+                styleGrid.style.pointerEvents = 'auto';
+                styleGrid.style.opacity = '1';
+            }
+            exportBtn.disabled = false; // Allow raster SVG export
+            exportBtn.innerText = "Export Laser (SVG)";
             clearVectorLayers();
             state.tileLayer.setOpacity(1);
         }
     };
 
     // Initial state
-    exportBtn.innerText = "Export Bitmap (SVG)";
+    exportBtn.innerText = "Export Laser (SVG)";
 
     vectorToggle.addEventListener('change', (e) => {
         state.vectorMode = e.target.checked;
@@ -343,7 +363,11 @@ function setupControls() {
                 return type === 'chk' ? el.checked : el.value;
             };
 
-            state.activeLayers[layer].stroke = getVal(`layer-${layer}-stroke`);
+            let rawStroke = getVal(`layer-${layer}-stroke`);
+            if (rawStroke === '#000000') rawStroke = '#ffffff';
+            else if (rawStroke === '#ffffff') rawStroke = '#000000';
+
+            state.activeLayers[layer].stroke = rawStroke;
             state.activeLayers[layer].width = parseFloat(getVal(`layer-${layer}-width`)) || 0;
             state.activeLayers[layer].fill = getVal(`layer-${layer}-fill`);
             state.activeLayers[layer].fillEnabled = getVal(`layer-${layer}-fill-enabled`, 'chk');
@@ -395,7 +419,7 @@ function setupControls() {
         }
 
         // Hatch Patterns - Sync Range and Number inputs
-        ['hatch-style', 'hatch-scale', 'hatch-rotation'].forEach(prop => {
+        ['hatch-style', 'hatch-scale', 'hatch-rotation', 'hatch-color', 'hatch-width'].forEach(prop => {
             const rawProp = `layer-${layer}-${prop}`;
             const el = document.getElementById(rawProp);
 
@@ -421,7 +445,7 @@ function setupControls() {
                     });
                 }
             } else {
-                // Style select
+                // Style, Color, Width
                 if (el) {
                     el.addEventListener('input', (e) => {
                         const camelProp = prop.replace(/-([a-z])/g, (g) => g[1].toUpperCase());
@@ -466,7 +490,7 @@ function setupControls() {
     }
 
     // Export
-    document.getElementById('export-btn').addEventListener('click', exportMap);
+    document.getElementById('export-btn').addEventListener('click', () => exportMap(false));
     document.getElementById('export-xtool-btn').addEventListener('click', () => exportMap(true));
     document.getElementById('export-jpg-btn').addEventListener('click', exportJpg);
 
@@ -868,17 +892,42 @@ function renderVectorLayers() {
             pattern.setAttribute('height', size);
             pattern.setAttribute('patternTransform', `rotate(${conf.hatchRotation || 0})`);
 
+            // Background fill if enabled (allows Solid Fill + Hatch)
+            if (conf.fillEnabled) {
+                const bgRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                bgRect.setAttribute('width', size);
+                bgRect.setAttribute('height', size);
+                bgRect.setAttribute('fill', conf.fill);
+                // No opacity here, solid fill
+                pattern.appendChild(bgRect);
+            }
+
             const createLine = (x1, y1, x2, y2, dash = '') => {
                 const l = document.createElementNS('http://www.w3.org/2000/svg', 'line');
                 l.setAttribute('x1', x1); l.setAttribute('y1', y1);
                 l.setAttribute('x2', x2); l.setAttribute('y2', y2);
-                l.setAttribute('stroke', conf.fill);
-                // Also scale the pattern stroke width slightly, or keep it 1?
-                // Visual consistency usually requires scaling it too, otherwise it looks too thin.
-                // Let's scale it but clamp it so it doesn't get absurdly thick.
-                l.setAttribute('stroke-width', (1 * zoomScale).toFixed(2));
+                l.setAttribute('stroke', conf.hatchColor || '#000000'); // Use hatch color
+
+                // Scale hatch width
+                const hw = (conf.hatchWidth || 0.5) * zoomScale;
+                l.setAttribute('stroke-width', hw.toFixed(2));
+
                 if (dash) l.setAttribute('stroke-dasharray', dash);
                 return l;
+            };
+
+            const hColor = conf.hatchColor || '#000000';
+            const hWidth = (conf.hatchWidth || 0.5) * zoomScale;
+
+            // Helper for circle/paths
+            const setStrokeFill = (el, isStroke = true) => {
+                if (isStroke) {
+                    el.setAttribute('stroke', hColor);
+                    el.setAttribute('stroke-width', hWidth.toFixed(2));
+                    el.setAttribute('fill', 'none');
+                } else {
+                    el.setAttribute('fill', hColor);
+                }
             };
 
             switch (conf.hatchStyle) {
@@ -902,15 +951,15 @@ function renderVectorLayers() {
                 case 'dots':
                     const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
                     circle.setAttribute('cx', size / 2); circle.setAttribute('cy', size / 2);
-                    circle.setAttribute('r', (size / 6)); // Radius scales with size
-                    circle.setAttribute('fill', conf.fill);
+                    circle.setAttribute('r', (size / 6));
+                    setStrokeFill(circle, false);
                     pattern.appendChild(circle);
                     break;
                 case 'dots-large':
                     const circleL = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
                     circleL.setAttribute('cx', size / 2); circleL.setAttribute('cy', size / 2);
                     circleL.setAttribute('r', (size / 3));
-                    circleL.setAttribute('fill', conf.fill);
+                    setStrokeFill(circleL, false);
                     pattern.appendChild(circleL);
                     break;
                 case 'dashed':
@@ -919,23 +968,20 @@ function renderVectorLayers() {
                 case 'zigzag':
                     const pZig = document.createElementNS('http://www.w3.org/2000/svg', 'path');
                     pZig.setAttribute('d', `M 0 ${size} L ${size / 2} 0 L ${size} ${size}`);
-                    pZig.setAttribute('fill', 'none'); pZig.setAttribute('stroke', conf.fill);
-                    pZig.setAttribute('stroke-width', (1 * zoomScale).toFixed(2));
+                    setStrokeFill(pZig, true);
                     pattern.appendChild(pZig);
                     break;
                 case 'waves':
                     const pWave = document.createElementNS('http://www.w3.org/2000/svg', 'path');
                     pWave.setAttribute('d', `M 0 ${size / 2} Q ${size / 4} 0, ${size / 2} ${size / 2} T ${size} ${size / 2}`);
-                    pWave.setAttribute('fill', 'none'); pWave.setAttribute('stroke', conf.fill);
-                    pWave.setAttribute('stroke-width', (1 * zoomScale).toFixed(2));
+                    setStrokeFill(pWave, true);
                     pattern.appendChild(pWave);
                     break;
                 case 'hexagons':
                     const pHex = document.createElementNS('http://www.w3.org/2000/svg', 'path');
                     const h = (Math.sqrt(3) / 2) * size;
-                    pHex.setAttribute('d', `M ${size / 4} 0 L ${size * 3 / 4} 0 L ${size} ${h / 2} L ${size * 3 / 4} h L ${size / 4} h L 0 ${h / 2} Z`);
-                    pHex.setAttribute('fill', 'none'); pHex.setAttribute('stroke', conf.fill);
-                    pHex.setAttribute('stroke-width', (1 * zoomScale).toFixed(2));
+                    pHex.setAttribute('d', `M ${size / 4} 0 L ${size * 3 / 4} 0 L ${size} ${h / 2} L ${size * 3 / 4} ${h} L ${size / 4} ${h} L 0 ${h / 2} Z`);
+                    setStrokeFill(pHex, true);
                     pattern.appendChild(pHex);
                     pattern.setAttribute('height', h);
                     break;
@@ -948,16 +994,14 @@ function renderVectorLayers() {
                 case 'stars':
                     const pStar = document.createElementNS('http://www.w3.org/2000/svg', 'path');
                     pStar.setAttribute('d', `M ${size / 2} 0 L ${size / 2} ${size} M 0 ${size / 2} L ${size} ${size / 2} M ${size / 4} ${size / 4} L ${size * 3 / 4} ${size * 3 / 4} M ${size * 3 / 4} ${size / 4} L ${size / 4} ${size * 3 / 4}`);
-                    pStar.setAttribute('fill', 'none'); pStar.setAttribute('stroke', conf.fill);
-                    pStar.setAttribute('stroke-width', (1 * zoomScale).toFixed(2));
+                    setStrokeFill(pStar, true);
                     pattern.appendChild(pStar);
                     break;
                 case 'squares':
                     const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
                     rect.setAttribute('x', size / 4); rect.setAttribute('y', size / 4);
                     rect.setAttribute('width', size / 2); rect.setAttribute('height', size / 2);
-                    rect.setAttribute('fill', 'none'); rect.setAttribute('stroke', conf.fill);
-                    rect.setAttribute('stroke-width', (1 * zoomScale).toFixed(2));
+                    setStrokeFill(rect, true);
                     pattern.appendChild(rect);
                     break;
                 case 'lines':
@@ -977,8 +1021,10 @@ function renderVectorLayers() {
             weight: conf.width * zoomScale,
             opacity: 1,
             fill: true,
+            // If HATCHED, used URL. If hatched & fillEnabled, pattern HAS bg. 
+            // If NOT hatched but fillEnabled, use conf.fill.
             fillColor: conf.hatched ? `url(#hatch-diag-${key})` : conf.fill,
-            fillOpacity: conf.fillEnabled ? (conf.hatched ? 1 : 0.2) : 0
+            fillOpacity: (conf.fillEnabled || conf.hatched) ? 1 : 0
         };
     };
 
@@ -1134,13 +1180,12 @@ async function exportMap(isXtool = false) {
                 groups[layerKey].push(`<path d="${path}" ${style} />`);
             });
 
-            // Helper to get attrs
+            // Helper to get parameters
             const getAttrs = (k) => {
                 const c = state.activeLayers[k];
                 if (isXtool) {
-                    // Standard Laser Colors for Autodetect
-                    // Red = Cut, Blue = Score, Black/Gray = Engrave
-                    let stroke = '#000000'; // Default Engrave
+                    // XCS specific logic
+                    let stroke = '#000000';
                     if (c.laserMode === 'score') stroke = '#0000FF'; // Blue
                     if (c.laserMode === 'cut') stroke = '#FF0000'; // Red
 
@@ -1148,67 +1193,53 @@ async function exportMap(isXtool = false) {
                     return `stroke="${stroke}" stroke-width="${c.width}" fill="${fill}" xtool:mode="${c.laserMode}" xtool:power="${c.power}" xtool:speed="${c.speed}"`;
                 }
                 const fill = c.hatched ? `url(#hatch-diag-${k})` : (c.fillEnabled ? c.fill : 'none');
-                return `stroke="${c.stroke}" stroke-width="${c.width}" fill="${fill}" fill-opacity="${c.fillEnabled ? (c.hatched ? 1 : 0.2) : 0}"`;
+                return `stroke="${c.stroke}" stroke-width="${c.width}" fill="${fill}" fill-opacity="${c.fillEnabled ? 1 : (c.hatched ? 1 : 0)}"`;
             };
 
-            // Pattern defs for export
+            // Pattern defs for export (Matching main logic)
             const patternsSvg = Object.keys(state.activeLayers)
                 .filter(k => state.activeLayers[k].hatched)
                 .map(k => {
                     const conf = state.activeLayers[k];
-                    const size = 4 * (conf.hatchScale || 1); // Use smaller base size for export (PDF/SVG)
+                    const size = 4 * (conf.hatchScale || 1);
+
+                    // Background
+                    let bg = '';
+                    if (conf.fillEnabled) {
+                        bg = `<rect width="${size}" height="${size}" fill="${conf.fill}" />`;
+                    }
+
+                    const hColor = conf.hatchColor || '#000000';
+                    const hWidth = (conf.hatchWidth || 0.5);
+
+                    const lineStr = (x1, y1, x2, y2, d = '') => `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${hColor}" stroke-width="${hWidth}" ${d ? `stroke-dasharray="${d}"` : ''}/>`;
+                    const pathStr = (d, isF = false) => `<path d="${d}" fill="${isF ? hColor : 'none'}" stroke="${isF ? 'none' : hColor}" stroke-width="${hWidth}"/>`;
+                    const circleStr = (cx, cy, r) => `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${hColor}"/>`;
+                    const rectStr = (x, y, w, h) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="none" stroke="${hColor}" stroke-width="${hWidth}"/>`;
+
                     let content = '';
 
                     switch (conf.hatchStyle) {
-                        case 'lines-left':
-                            content = `<line x1="0" y1="${size}" x2="${size}" y2="0" stroke="${conf.fill}" stroke-width="0.5"/>`;
-                            break;
-                        case 'horizontal':
-                            content = `<line x1="0" y1="${size / 2}" x2="${size}" y2="${size / 2}" stroke="${conf.fill}" stroke-width="0.5"/>`;
-                            break;
-                        case 'vertical':
-                            content = `<line x1="${size / 2}" y1="0" x2="${size / 2}" y2="${size}" stroke="${conf.fill}" stroke-width="0.5"/>`;
-                            break;
-                        case 'grid':
-                            content = `<line x1="0" y1="0" x2="0" y2="${size}" stroke="${conf.fill}" stroke-width="0.5"/><line x1="0" y1="0" x2="${size}" y2="0" stroke="${conf.fill}" stroke-width="0.5"/>`;
-                            break;
-                        case 'crosshatch':
-                            content = `<line x1="0" y1="0" x2="${size}" y2="${size}" stroke="${conf.fill}" stroke-width="0.5"/><line x1="0" y1="${size}" x2="${size}" y2="0" stroke="${conf.fill}" stroke-width="0.5"/>`;
-                            break;
-                        case 'dots':
-                            content = `<circle cx="${size / 2}" cy="${size / 2}" r="${size / 6}" fill="${conf.fill}"/>`;
-                            break;
-                        case 'dots-large':
-                            content = `<circle cx="${size / 2}" cy="${size / 2}" r="${size / 3}" fill="${conf.fill}"/>`;
-                            break;
-                        case 'dashed':
-                            content = `<line x1="0" y1="0" x2="0" y2="${size}" stroke="${conf.fill}" stroke-width="0.5" stroke-dasharray="${size / 2},${size / 2}"/>`;
-                            break;
-                        case 'zigzag':
-                            content = `<path d="M 0 ${size} L ${size / 2} 0 L ${size} ${size}" fill="none" stroke="${conf.fill}" stroke-width="0.5"/>`;
-                            break;
-                        case 'waves':
-                            content = `<path d="M 0 ${size / 2} Q ${size / 4} 0, ${size / 2} ${size / 2} T ${size} ${size / 2}" fill="none" stroke="${conf.fill}" stroke-width="0.5"/>`;
-                            break;
+                        case 'lines-left': content = lineStr(0, size, size, 0); break;
+                        case 'horizontal': content = lineStr(0, size / 2, size, size / 2); break;
+                        case 'vertical': content = lineStr(size / 2, 0, size / 2, size); break;
+                        case 'grid': content = lineStr(0, 0, 0, size) + lineStr(0, 0, size, 0); break;
+                        case 'crosshatch': content = lineStr(0, 0, size, size) + lineStr(0, size, size, 0); break;
+                        case 'dots': content = circleStr(size / 2, size / 2, size / 6); break;
+                        case 'dots-large': content = circleStr(size / 2, size / 2, size / 3); break;
+                        case 'dashed': content = lineStr(0, 0, 0, size, `${size / 2},${size / 2}`); break;
+                        case 'zigzag': content = pathStr(`M 0 ${size} L ${size / 2} 0 L ${size} ${size}`); break;
+                        case 'waves': content = pathStr(`M 0 ${size / 2} Q ${size / 4} 0, ${size / 2} ${size / 2} T ${size} ${size / 2}`); break;
                         case 'hexagons':
                             const h_exp = (Math.sqrt(3) / 2) * size;
-                            content = `<path d="M ${size / 4} 0 L ${size * 3 / 4} 0 L ${size} ${h_exp / 2} L ${size * 3 / 4} ${h_exp} L ${size / 4} ${h_exp} L 0 ${h_exp / 2} Z" fill="none" stroke="${conf.fill}" stroke-width="0.5"/>`;
+                            content = pathStr(`M ${size / 4} 0 L ${size * 3 / 4} 0 L ${size} ${h_exp / 2} L ${size * 3 / 4} ${h_exp} L ${size / 4} ${h_exp} L 0 ${h_exp / 2} Z`);
                             break;
-                        case 'bricks':
-                            content = `<line x1="0" y1="0" x2="${size}" y2="0" stroke="${conf.fill}" stroke-width="0.5"/><line x1="0" y1="${size / 2}" x2="${size}" y2="${size / 2}" stroke="${conf.fill}" stroke-width="0.5"/><line x1="0" y1="0" x2="0" y2="${size / 2}" stroke="${conf.fill}" stroke-width="0.5"/><line x1="${size / 2}" y1="${size / 2}" x2="${size / 2}" y2="${size}" stroke="${conf.fill}" stroke-width="0.5"/>`;
-                            break;
-                        case 'stars':
-                            content = `<path d="M ${size / 2} 0 L ${size / 2} ${size} M 0 ${size / 2} L ${size} ${size / 2} M ${size / 4} ${size / 4} L ${size * 3 / 4} ${size * 3 / 4} M ${size * 3 / 4} ${size / 4} L ${size / 4} ${size * 3 / 4}" fill="none" stroke="${conf.fill}" stroke-width="0.5"/>`;
-                            break;
-                        case 'squares':
-                            content = `<rect x="${size / 4}" y="${size / 4}" width="${size / 2}" height="${size / 2}" fill="none" stroke="${conf.fill}" stroke-width="0.5"/>`;
-                            break;
-                        case 'lines':
-                        default:
-                            content = `<line x1="0" y1="0" x2="0" y2="${size}" stroke="${conf.fill}" stroke-width="0.5"/>`;
-                            break;
+                        case 'bricks': content = lineStr(0, 0, size, 0) + lineStr(0, size / 2, size, size / 2) + lineStr(0, 0, 0, size / 2) + lineStr(size / 2, size / 2, size / 2, size); break;
+                        case 'stars': content = pathStr(`M ${size / 2} 0 L ${size / 2} ${size} M 0 ${size / 2} L ${size} ${size / 2} M ${size / 4} ${size / 4} L ${size * 3 / 4} ${size * 3 / 4} M ${size * 3 / 4} ${size / 4} L ${size / 4} ${size * 3 / 4}`); break;
+                        case 'squares': content = rectStr(size / 4, size / 4, size / 2, size / 2); break;
+                        case 'lines': default: content = lineStr(0, 0, 0, size); break;
                     }
-                    return `<pattern id="hatch-diag-${k}" patternUnits="userSpaceOnUse" width="${size}" height="${size}" patternTransform="rotate(${conf.hatchRotation || 0})">${content}</pattern>`;
+                    return `<pattern id="hatch-diag-${k}" patternUnits="userSpaceOnUse" width="${size}" height="${size}" patternTransform="rotate(${conf.hatchRotation || 0})">${bg}${content}</pattern>`;
                 }).join('\n');
 
             // Street Labels SVG
@@ -1469,7 +1500,7 @@ async function exportJpg() {
     if (!t) return;
 
     // Apply Base Style
-    document.getElementById('map-style-select').value = t.style;
+    syncMapStyleUI(t.style);
     setMapStyle(t.style);
 
     // Apply Background
@@ -1514,7 +1545,6 @@ async function exportJpg() {
         const styleSelect = document.getElementById('map-style-select');
         const exportBtn = document.getElementById('export-btn');
         layerList.classList.remove('disabled');
-        styleSelect.disabled = true;
         exportBtn.innerText = "Export Laser (SVG)";
 
         if (state.map.getZoom() < 15) {

@@ -516,6 +516,29 @@ button {
     backdrop-filter: blur(10px);
 }
 
+.hatch-row-full.compact-row-inputs {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.col-half {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.col-half label {
+    font-size: 0.75rem;
+    color: #94a3b8;
+}
+
+.full-width-input {
+    width: 100% !important;
+    box-sizing: border-box;
+}
+
 /* Marker Tooltips */
 .leaflet-tooltip.custom-marker-label {
     background: transparent;
@@ -1246,4 +1269,52 @@ input[type=color]::-webkit-color-swatch {
     font-size: 0.65rem;
     color: var(--text-muted);
     font-family: 'Source Code Pro', monospace;
+}
+
+/* Status Metadata */
+.status-metadata {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    margin-top: 4px;
+    padding: 0 4px;
+    font-family: 'Source Code Pro', monospace;
+}
+
+/* Map Style Button Grid */
+.style-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.style-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    padding: 6px 4px;
+    font-size: 0.7rem;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: capitalize;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.style-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-main);
+    border-color: var(--text-muted);
+}
+
+.style-btn.active {
+    background: var(--primary);
+    color: #111;
+    border-color: var(--primary);
+    font-weight: 600;
+    box-shadow: 0 0 10px var(--primary-glow);
 }
