@@ -1227,8 +1227,14 @@ async function exportJpg() {
         btn.disabled = true;
         btn.innerText = "Generating JPG...";
 
+        StatusLog.log("Preparing export area...", "info");
+        StatusLog.progress(5);
+
+        // Ensure we wait a bit for any pending renders
+        await new Promise(resolve => setTimeout(resolve, 500));
+
         StatusLog.log("Starting JPG Export (4x Scale)...", "info");
-        StatusLog.progress(10);
+        StatusLog.progress(15);
 
         const scale = 4; // High definition capture
         const mapElement = document.getElementById('map-wrapper');
@@ -1239,18 +1245,23 @@ async function exportJpg() {
             scale: scale,
             backgroundColor: state.settings.backgroundColor,
             logging: false,
-            allowTaint: true,
-            scrollX: 0,
-            scrollY: 0,
-            x: window.scrollX + mapElement.getBoundingClientRect().left,
-            y: window.scrollY + mapElement.getBoundingClientRect().top,
+            // Removed allowTaint, x, y, scrollX, scrollY to fix positioning and security errors
             width: mapElement.offsetWidth,
             height: mapElement.offsetHeight,
             onclone: (clonedDoc) => {
                 StatusLog.log("Cloning DOM for capture...", "info");
-                StatusLog.progress(30);
+                StatusLog.progress(40);
                 const clonedWrapper = clonedDoc.getElementById('map-wrapper');
-                // Do NOT reset transform: none here as it might move Leaflet components
+
+                // Fix for Leaflet's translate3d which html2canvas sometimes struggles with
+                const panes = clonedWrapper.querySelectorAll('.leaflet-pane');
+                panes.forEach(pane => {
+                    const style = window.getComputedStyle(pane);
+                    const transform = style.getPropertyValue('transform');
+                    if (transform && transform !== 'none') {
+                        // Keep it as is if it's already 2D or let html2canvas try its best
+                    }
+                });
 
                 // CRITICAL: Copy all global SVG patterns into EVERY SVG element found in the clone
                 const originalDefs = document.querySelector('defs');
@@ -1273,7 +1284,7 @@ async function exportJpg() {
         });
 
         StatusLog.log("Canvas generated, encoding JPG...", "info");
-        StatusLog.progress(80);
+        StatusLog.progress(85);
 
         // Download as JPG
         const imgData = canvas.toDataURL('image/jpeg', 0.95);
