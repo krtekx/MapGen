@@ -28,13 +28,13 @@ const state = {
     vectorData: null, // Stores GeoJSON
     vectorLayers: {}, // Stores Leaflet Layer references
     activeLayers: {
-        streets: { visible: true, stroke: '#333333', width: 1, fill: '#ffffff', fillEnabled: false, hatched: false, hatchStyle: 'lines', hatchScale: 1, hatchRotation: 45, hatchColor: '#000000', hatchWidth: 0.5, labelsEnabled: false, laserMode: 'score', power: 20, speed: 100 },
-        water: { visible: true, stroke: '#3b82f6', width: 1, fill: '#3b82f6', fillEnabled: false, hatched: false, hatchStyle: 'lines', hatchScale: 1, hatchRotation: 45, hatchColor: '#000000', hatchWidth: 0.5, laserMode: 'engrave', power: 15, speed: 150 },
-        buildings: { visible: true, stroke: '#64748b', width: 1, fill: '#64748b', fillEnabled: true, hatched: false, hatchStyle: 'lines', hatchScale: 1, hatchRotation: 45, hatchColor: '#000000', hatchWidth: 0.5, laserMode: 'engrave', power: 10, speed: 200 },
-        parks: { visible: true, stroke: '#22c55e', width: 0, fill: '#22c55e', fillEnabled: true, hatched: false, hatchStyle: 'lines', hatchScale: 1, hatchRotation: 45, hatchColor: '#000000', hatchWidth: 0.5, laserMode: 'engrave', power: 10, speed: 200 },
-        railways: { visible: true, stroke: '#475569', width: 1.5, fill: '#000000', fillEnabled: false, hatched: false, hatchStyle: 'lines', hatchScale: 1, hatchRotation: 45, hatchColor: '#000000', hatchWidth: 0.5, laserMode: 'score', power: 30, speed: 80 },
-        industrial: { visible: false, stroke: '#94a3b8', width: 0.5, fill: '#cbd5e1', fillEnabled: false, hatched: false, hatchStyle: 'lines', hatchScale: 1, hatchRotation: 45, hatchColor: '#000000', hatchWidth: 0.5, laserMode: 'engrave', power: 10, speed: 200 },
-        parking: { visible: false, stroke: '#94a3b8', width: 0.5, fill: '#e2e8f0', fillEnabled: true, hatched: false, hatchStyle: 'lines', hatchScale: 1, hatchRotation: 45, hatchColor: '#000000', hatchWidth: 0.5, laserMode: 'engrave', power: 10, speed: 200 }
+        streets: { visible: true, stroke: '#333333', width: 1, fill: '#ffffff', fillEnabled: false, hatched: false, hatchStyle: 'lines', hatchScale: 1, hatchRotation: 45, hatchColor: '#000000', hatchWidth: 0.5, hatchText: 'STREET', labelsEnabled: false, laserMode: 'score', power: 20, speed: 100 },
+        water: { visible: true, stroke: '#3b82f6', width: 1, fill: '#3b82f6', fillEnabled: false, hatched: false, hatchStyle: 'lines', hatchScale: 1, hatchRotation: 45, hatchColor: '#000000', hatchWidth: 0.5, hatchText: 'WATER', laserMode: 'engrave', power: 15, speed: 150 },
+        buildings: { visible: true, stroke: '#64748b', width: 1, fill: '#64748b', fillEnabled: true, hatched: false, hatchStyle: 'lines', hatchScale: 1, hatchRotation: 45, hatchColor: '#000000', hatchWidth: 0.5, hatchText: 'MAP', laserMode: 'engrave', power: 10, speed: 200 },
+        parks: { visible: true, stroke: '#22c55e', width: 0, fill: '#22c55e', fillEnabled: true, hatched: false, hatchStyle: 'lines', hatchScale: 1, hatchRotation: 45, hatchColor: '#000000', hatchWidth: 0.5, hatchText: 'PARK', laserMode: 'engrave', power: 10, speed: 200 },
+        railways: { visible: true, stroke: '#475569', width: 1.5, fill: '#000000', fillEnabled: false, hatched: false, hatchStyle: 'lines', hatchScale: 1, hatchRotation: 45, hatchColor: '#000000', hatchWidth: 0.5, hatchText: 'RAIL', laserMode: 'score', power: 30, speed: 80 },
+        industrial: { visible: false, stroke: '#94a3b8', width: 0.5, fill: '#cbd5e1', fillEnabled: false, hatched: false, hatchStyle: 'lines', hatchScale: 1, hatchRotation: 45, hatchColor: '#000000', hatchWidth: 0.5, hatchText: 'INDUS', laserMode: 'engrave', power: 10, speed: 200 },
+        parking: { visible: false, stroke: '#94a3b8', width: 0.5, fill: '#e2e8f0', fillEnabled: true, hatched: false, hatchStyle: 'lines', hatchScale: 1, hatchRotation: 45, hatchColor: '#000000', hatchWidth: 0.5, hatchText: 'P', laserMode: 'engrave', power: 10, speed: 200 }
     },
     settings: {
         fontFamily: "'Outfit', sans-serif",
@@ -443,11 +443,29 @@ function setupControls() {
                     el.addEventListener('input', (e) => {
                         const camelProp = prop.replace(/-([a-z])/g, (g) => g[1].toUpperCase());
                         state.activeLayers[layer][camelProp] = e.target.value;
+
+                        // Toggle Text Row visibility if style changes
+                        if (prop === 'hatch-style') {
+                            const textRow = document.getElementById(`layer-${layer}-hatch-text-row`);
+                            if (textRow) {
+                                textRow.style.display = e.target.value === 'text' ? 'block' : 'none';
+                            }
+                        }
+
                         debouncedRenderVectorLayers();
                     });
                 }
             }
         });
+
+        // Hatch Text dedicated listener
+        const hatchTextEl = document.getElementById(`layer-${layer}-hatch-text`);
+        if (hatchTextEl) {
+            hatchTextEl.addEventListener('input', (e) => {
+                state.activeLayers[layer].hatchText = e.target.value;
+                debouncedRenderVectorLayers();
+            });
+        }
 
         // Laser Settings
         ['laser-mode', 'power', 'speed'].forEach(prop => {
@@ -995,6 +1013,18 @@ function renderVectorLayers() {
                     setStrokeFill(rect, true);
                     pattern.appendChild(rect);
                     break;
+                case 'text':
+                    const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                    text.setAttribute('x', size / 2);
+                    text.setAttribute('y', size / 2);
+                    text.setAttribute('text-anchor', 'middle');
+                    text.setAttribute('dominant-baseline', 'middle');
+                    text.setAttribute('font-size', size / 2);
+                    text.setAttribute('font-family', state.settings.fontFamily);
+                    text.textContent = conf.hatchText || 'TEXT';
+                    setStrokeFill(text, true);
+                    pattern.appendChild(text);
+                    break;
                 case 'lines':
                 default:
                     pattern.appendChild(createLine(0, 0, 0, size));
@@ -1144,12 +1174,10 @@ async function exportJpg() {
         btn.disabled = true;
         btn.innerText = "Generating JPG...";
 
-        // High scale for print quality
         const scale = 4; // High definition capture
-
         const mapElement = document.getElementById('map-wrapper');
 
-        // Ensure we capture even if scrolled or moved
+        // Capture using html2canvas
         const canvas = await html2canvas(mapElement, {
             useCORS: true,
             scale: scale,
@@ -1157,10 +1185,27 @@ async function exportJpg() {
             logging: false,
             allowTaint: true,
             onclone: (clonedDoc) => {
-                // Ensure the cloned map wrapper is visible and positioned correctly for capture
                 const clonedWrapper = clonedDoc.getElementById('map-wrapper');
                 clonedWrapper.style.transform = 'none';
                 clonedWrapper.style.margin = '0';
+
+                // CRITICAL: Copy all global SVG patterns into the cloned map container
+                // html2canvas needs the patterns to be within the captured context or accessible.
+                const originalDefs = document.querySelector('defs');
+                if (originalDefs) {
+                    const clonedSvg = clonedWrapper.querySelector('svg');
+                    if (clonedSvg) {
+                        const newDefs = originalDefs.cloneNode(true);
+                        clonedSvg.insertBefore(newDefs, clonedSvg.firstChild);
+                    } else {
+                        // If no SVG found yet (maybe Leaflet hasn't rendered it in clone?), 
+                        // we can append it to the wrapper as a hidden SVG.
+                        const hiddenSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                        hiddenSvg.style.display = 'none';
+                        hiddenSvg.appendChild(originalDefs.cloneNode(true));
+                        clonedWrapper.appendChild(hiddenSvg);
+                    }
+                }
             }
         });
 
