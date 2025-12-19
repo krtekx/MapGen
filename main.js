@@ -205,7 +205,22 @@ function setMapStyle(style) {
     state.tileLayer.setUrl(url);
     if (className) mapDiv.classList.add(className);
     state.settings.mapStyle = style;
+    state.tileLayer.setUrl(url);
+    if (className) mapDiv.classList.add(className);
+    state.settings.mapStyle = style;
 }
+
+function debounce(func, wait) {
+    let timeout;
+    return function (...args) {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(this, args), wait);
+    };
+}
+
+const debouncedRenderVectorLayers = debounce(() => {
+    if (state.vectorMode) renderVectorLayers();
+}, 500);
 
 function setupControls() {
     // Search
@@ -322,23 +337,30 @@ function setupControls() {
 
         // Styling
         const updateStyle = () => {
-            state.activeLayers[layer].stroke = document.getElementById(`layer-${layer}-stroke`).value;
-            state.activeLayers[layer].width = parseFloat(document.getElementById(`layer-${layer}-width`).value) || 0;
-            state.activeLayers[layer].fill = document.getElementById(`layer-${layer}-fill`).value;
-            state.activeLayers[layer].fillEnabled = document.getElementById(`layer-${layer}-fill-enabled`).checked;
+            const getVal = (id, type) => {
+                const el = document.getElementById(id);
+                if (!el) return null;
+                return type === 'chk' ? el.checked : el.value;
+            };
 
-            console.log(`Updating ${layer}:`, state.activeLayers[layer]); // Debug log
+            state.activeLayers[layer].stroke = getVal(`layer-${layer}-stroke`);
+            state.activeLayers[layer].width = parseFloat(getVal(`layer-${layer}-width`)) || 0;
+            state.activeLayers[layer].fill = getVal(`layer-${layer}-fill`);
+            state.activeLayers[layer].fillEnabled = getVal(`layer-${layer}-fill-enabled`, 'chk');
 
-            // Re-apply style to Leaflet layer if it exists
+            // Immediate feedback (though weight might be slightly off until full render)
             if (state.vectorLayers[layer]) {
                 const conf = state.activeLayers[layer];
                 state.vectorLayers[layer].setStyle({
                     color: conf.stroke,
-                    weight: conf.width,
+                    weight: conf.width, // Note: real render applies zoom scale
                     fillColor: conf.fill,
                     fillOpacity: conf.fillEnabled ? 0.2 : 0
                 });
             }
+
+            // Trigger full re-render (debounced) to ensure patterns and correct scaling
+            debouncedRenderVectorLayers();
         };
 
         ['stroke', 'width', 'fill'].forEach(prop => {
@@ -357,11 +379,8 @@ function setupControls() {
                 if (hatchSettings) {
                     hatchSettings.classList.toggle('visible', e.target.checked);
                 }
-                updateStyle();
-                if (state.vectorMode) renderVectorLayers(); // Force re-render of patterns
+                updateStyle(); // This calls debouncedRenderVectorLayers
             });
-
-            // Initial visibility state
             if (hatchSettings && hatchedBtn.checked) {
                 hatchSettings.classList.add('visible');
             }
@@ -381,7 +400,7 @@ function setupControls() {
                         valEl.innerText = e.target.value + (prop === 'hatch-rotation' ? '°' : '');
                     }
 
-                    if (state.vectorMode) renderVectorLayers();
+                    debouncedRenderVectorLayers();
                 });
             }
         });
@@ -658,6 +677,42 @@ function project(lat, lon, bounds, width, height) {
     };
 }
 
+const OVERPASS_ENDPOINTS = [
+    'https://overpass-api.de/api/interpreter',
+    'https://overpass.kumi.systems/api/interpreter',
+    'https://maps.mail.ru/osm/tools/overpass/api/interpreter'
+];
+
+async function fetchWithFallback(query) {
+    for (const endpoint of OVERPASS_ENDPOINTS) {
+        try {
+            StatusLog.log(`Querying: ${new URL(endpoint).hostname}...`, 'info');
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
+
+            const response = await fetch(endpoint, {
+                method: 'POST',
+                body: query,
+                signal: controller.signal
+            });
+            clearTimeout(timeoutId);
+
+            if (!response.ok) {
+                if (response.status === 429) {
+                    StatusLog.log(`Rate limited by ${new URL(endpoint).hostname}, trying next...`, 'warn');
+                    continue;
+                }
+                throw new Error(`HTTP ${response.status}`);
+            }
+            return await response.json();
+        } catch (e) {
+            console.warn(`Failed to fetch from ${endpoint}:`, e);
+            StatusLog.log(`Failed: ${new URL(endpoint).hostname} (${e.message})`, 'warn');
+        }
+    }
+    throw new Error("All Overpass servers failed.");
+}
+
 async function fetchAndRenderVectors() {
     if (!state.map) return;
     const btn = document.getElementById('vector-mode-toggle');
@@ -712,17 +767,17 @@ async function fetchAndRenderVectors() {
         StatusLog.progress(20);
 
         console.log("Fetching vector data...");
-        const response = await fetch('https://overpass-api.de/api/interpreter', {
-            method: 'POST',
-            body: query
-        });
 
-        if (!response.ok) throw new Error("Overpass API request failed");
+        let data;
+        try {
+            data = await fetchWithFallback(query);
+        } catch (fetchError) {
+            throw new Error("Network Error: Could not reach OSM servers. " + fetchError.message);
+        }
 
         StatusLog.log("Data Received. Parsing...", "info");
         StatusLog.progress(60);
 
-        const data = await response.json();
         // Convert to GeoJSON
         state.vectorData = osmtogeojson(data);
         console.log("GeoJSON parsed:", state.vectorData);
