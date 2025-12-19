@@ -24,10 +24,13 @@ const state = {
     vectorData: null, // Stores GeoJSON
     vectorLayers: {}, // Stores Leaflet Layer references
     activeLayers: {
-        buildings: { visible: true, stroke: '#64748b', width: 1, fill: '#64748b', fillEnabled: true },
-        water: { visible: true, stroke: '#3b82f6', width: 1, fill: '#3b82f6', fillEnabled: true },
-        streets: { visible: true, stroke: '#333333', width: 1, fill: '#ffffff', fillEnabled: false, labelsEnabled: false },
-        parks: { visible: true, stroke: '#22c55e', width: 0, fill: '#22c55e', fillEnabled: true }
+        buildings: { visible: true, stroke: '#64748b', width: 1, fill: '#64748b', fillEnabled: true, hatched: false },
+        water: { visible: true, stroke: '#3b82f6', width: 1, fill: '#3b82f6', fillEnabled: true, hatched: false },
+        streets: { visible: true, stroke: '#333333', width: 1, fill: '#ffffff', fillEnabled: false, hatched: false, labelsEnabled: false },
+        parks: { visible: true, stroke: '#22c55e', width: 0, fill: '#22c55e', fillEnabled: true, hatched: false },
+        railways: { visible: true, stroke: '#475569', width: 1.5, fill: '#000000', fillEnabled: false, hatched: false },
+        industrial: { visible: false, stroke: '#94a3b8', width: 0.5, fill: '#cbd5e1', fillEnabled: false, hatched: false },
+        parking: { visible: false, stroke: '#94a3b8', width: 0.5, fill: '#e2e8f0', fillEnabled: false, hatched: false }
     },
     settings: {
         fontFamily: "'Outfit', sans-serif",
@@ -43,6 +46,9 @@ document.addEventListener('DOMContentLoaded', () => {
     setupControls();
     updateMapSize();
     initResizeObserver();
+
+    // Set initial background color from input
+    document.getElementById('map-wrapper').style.backgroundColor = document.getElementById('map-bg-color').value;
 });
 
 function initMap() {
@@ -69,25 +75,28 @@ function setMapStyle(style) {
     let className = '';
 
     // Reset filters
-    mapDiv.className = 'leaflet-container leaflet-touch leaflet-fade-anim leaflet-grab leaflet-touch-drag leaflet-touch-zoom'; // Reset but keep Leaflet classes?
-    // Actually better to just remove specific custom classes.
-    // The legacy code used: mapDiv.className = ''; which wipes Leaflet classes!
-    // This looks like a bug in legacy code if it wiped 'leaflet-container' etc.
-    // BUT if it worked, maybe Leaflet re-adds them? No, Leaflet adds them on init.
-    // If I wipe className, map breaks.
-    // Let's improve this: remove only known filter classes.
-    mapDiv.classList.remove('map-filter-grey', 'map-filter-line');
+    mapDiv.classList.remove('map-filter-grey', 'map-filter-line', 'map-filter-vintage', 'map-filter-blueprint');
 
     switch (style) {
         case 'light':
-            url = 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
+            url = 'https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png';
             break;
-        case 'grey':
-            url = 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
-            className = 'map-filter-grey';
+        case 'vintage':
+            url = 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager_labels_under/{z}/{x}/{y}{r}.png';
+            className = 'map-filter-vintage';
+            break;
+        case 'blueprint':
+            url = 'https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png';
+            className = 'map-filter-blueprint';
+            break;
+        case 'satellite':
+            url = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
+            break;
+        case 'topo':
+            url = 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png';
             break;
         case 'line':
-            url = 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
+            url = 'https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png';
             className = 'map-filter-line';
             break;
         case 'standard':
@@ -131,13 +140,20 @@ function setupControls() {
         document.getElementById('map-wrapper').style.borderRadius = `${px}px`;
     });
 
-    // Presets
-    document.querySelectorAll('.chip').forEach(btn => {
+    // Presets (Dimensions)
+    document.querySelectorAll('.chip:not(.theme-btn)').forEach(btn => {
         btn.addEventListener('click', () => {
             widthInput.value = btn.dataset.w;
             heightInput.value = btn.dataset.h;
             updateMapSize();
             state.map.invalidateSize();
+        });
+    });
+
+    // Graphic Themes
+    document.querySelectorAll('.theme-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            applyGraphicTheme(btn.dataset.theme);
         });
     });
 
@@ -166,7 +182,7 @@ function setupControls() {
     const layerList = document.getElementById('layer-toggles');
     const styleSelect = document.getElementById('map-style-select');
     const exportBtn = document.getElementById('export-btn');
-    const layers = ['buildings', 'water', 'streets', 'parks'];
+    const layers = ['buildings', 'water', 'streets', 'parks', 'railways', 'industrial', 'parking'];
 
     const updateUIState = () => {
         if (state.vectorMode) {
@@ -228,9 +244,18 @@ function setupControls() {
         };
 
         ['stroke', 'width', 'fill'].forEach(prop => {
-            document.getElementById(`layer-${layer}-${prop}`).addEventListener('input', updateStyle);
+            const el = document.getElementById(`layer-${layer}-${prop}`);
+            if (el) el.addEventListener('input', updateStyle);
         });
-        document.getElementById(`layer-${layer}-fill-enabled`).addEventListener('change', updateStyle);
+
+        const fillEnabledBtn = document.getElementById(`layer-${layer}-fill-enabled`);
+        if (fillEnabledBtn) fillEnabledBtn.addEventListener('change', updateStyle);
+
+        const hatchedBtn = document.getElementById(`layer-${layer}-hatched`);
+        if (hatchedBtn) hatchedBtn.addEventListener('change', (e) => {
+            state.activeLayers[layer].hatched = e.target.checked;
+            updateStyle();
+        });
     });
 
     // Street Labels Toggle
@@ -299,13 +324,13 @@ function setupControls() {
 
 function updateMarkerStyles() {
     state.markers.forEach(item => {
-        const { marker } = item;
+        const { marker, fontFamily, fontSize } = item;
         const tooltip = marker.getTooltip();
         if (tooltip) {
             const el = tooltip.getElement();
             if (el) {
-                el.style.fontFamily = state.settings.fontFamily;
-                el.style.fontSize = `${state.settings.fontSize}px`;
+                el.style.fontFamily = fontFamily || state.settings.fontFamily;
+                el.style.fontSize = `${fontSize || state.settings.fontSize}px`;
 
                 if (state.settings.bubble) {
                     el.classList.add('bubble-style');
@@ -321,7 +346,7 @@ function addMarker(text) {
     const center = state.map.getCenter();
     const marker = L.marker(center, {
         draggable: true,
-        title: 'Right click to remove'
+        title: 'Drag to position'
     }).addTo(state.map);
 
     marker.bindTooltip(text, {
@@ -330,17 +355,84 @@ function addMarker(text) {
         className: 'custom-marker-label'
     }).openTooltip();
 
-    // Track it
-    const markerObj = { id: Date.now(), marker };
+    // Track it with current global settings as defaults
+    const markerObj = {
+        id: Date.now(),
+        text,
+        marker,
+        fontFamily: state.settings.fontFamily,
+        fontSize: state.settings.fontSize
+    };
     state.markers.push(markerObj);
 
-    // Apply current styles immediately (after a tick for DOM render)
+    // Apply current styles immediately
     setTimeout(() => updateMarkerStyles(), 50);
 
-    marker.on('contextmenu', () => {
-        marker.remove();
-        state.markers = state.markers.filter(m => m.id !== markerObj.id);
+    // Update UI
+    refreshMarkerListUI();
+
+    marker.on('dragend', () => {
+        // Just to be safe, update styles again if needed
+        updateMarkerStyles();
     });
+}
+
+function refreshMarkerListUI() {
+    const container = document.getElementById('marker-list');
+    if (!container) return;
+
+    container.innerHTML = '';
+
+    state.markers.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'marker-card';
+        card.innerHTML = `
+            <div class="marker-card-header">
+                <span>${item.text}</span>
+                <button class="btn-delete-marker" data-id="${item.id}" title="Delete Pin">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    </svg>
+                </button>
+            </div>
+            <div class="marker-card-controls">
+                <div class="input-group">
+                    <select class="marker-font-select" data-id="${item.id}">
+                        <option value="'Outfit', sans-serif" ${item.fontFamily.includes('Outfit') ? 'selected' : ''}>Sans</option>
+                        <option value="'Playfair Display', serif" ${item.fontFamily.includes('Playfair') ? 'selected' : ''}>Serif</option>
+                        <option value="'Source Code Pro', monospace" ${item.fontFamily.includes('Source Code') ? 'selected' : ''}>Mono</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <input type="number" class="marker-size-input" data-id="${item.id}" value="${item.fontSize}" min="8" max="60">
+                </div>
+            </div>
+        `;
+        container.appendChild(card);
+
+        // Listeners for this card
+        card.querySelector('.btn-delete-marker').onclick = () => deleteMarker(item.id);
+
+        card.querySelector('.marker-font-select').onchange = (e) => {
+            item.fontFamily = e.target.value;
+            updateMarkerStyles();
+        };
+
+        card.querySelector('.marker-size-input').oninput = (e) => {
+            item.fontSize = parseInt(e.target.value);
+            updateMarkerStyles();
+        };
+    });
+}
+
+function deleteMarker(id) {
+    const index = state.markers.findIndex(m => m.id === id);
+    if (index !== -1) {
+        state.markers[index].marker.remove();
+        state.markers.splice(index, 1);
+        refreshMarkerListUI();
+    }
 }
 
 async function doSearch(query) {
@@ -446,16 +538,19 @@ async function fetchAndRenderVectors() {
         state.tileLayer.setOpacity(0.1);
 
         // OSM Overpass Query
-        // We want roads, water, buildings, parks
+        // We want roads, water, buildings, parks, railways, landuse
         const query = `
             [out:json][timeout:25];
             (
               way["highway"](${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()});
+              way["railway"](${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()});
               way["waterway"](${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()});
               relation["waterway"](${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()});
               way["building"](${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()});
               way["leisure"~"park|garden"](${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()});
-              way["landuse"~"grass|forest"](${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()});
+              way["landuse"~"grass|forest|orchard|vineyard|industrial|commercial|residential|retail"](${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()});
+              way["natural"~"water|wood|scrub|grassland"](${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()});
+              way["amenity"~"parking"](${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()});
             );
             out geom;
         `;
@@ -499,26 +594,50 @@ function renderVectorLayers() {
     if (!state.vectorData) return;
     clearVectorLayers();
 
-    const styles = {};
+    // Update dynamic patterns
+    const defs = document.querySelector('defs');
     Object.keys(state.activeLayers).forEach(key => {
         const conf = state.activeLayers[key];
-        styles[key] = {
+        if (conf.hatched) {
+            let pattern = document.getElementById(`hatch-diag-${key}`);
+            if (!pattern) {
+                pattern = document.createElementNS('http://www.w3.org/2000/svg', 'pattern');
+                pattern.setAttribute('id', `hatch-diag-${key}`);
+                pattern.setAttribute('patternUnits', 'userSpaceOnUse');
+                pattern.setAttribute('width', '10');
+                pattern.setAttribute('height', '10');
+                pattern.setAttribute('patternTransform', 'rotate(45)');
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                line.setAttribute('x1', '0');
+                line.setAttribute('y1', '0');
+                line.setAttribute('x2', '0');
+                line.setAttribute('y2', '10');
+                line.setAttribute('stroke-width', '2');
+                pattern.appendChild(line);
+                defs.appendChild(pattern);
+            }
+            // Update patterns stroke color
+            pattern.querySelector('line').setAttribute('stroke', conf.fill);
+        }
+    });
+
+    const getStyle = (key) => {
+        const conf = state.activeLayers[key];
+        return {
             color: conf.stroke,
             weight: conf.width,
             opacity: 1,
             fill: true,
-            fillColor: conf.fill,
-            fillOpacity: conf.fillEnabled ? 0.2 : 0
+            fillColor: conf.hatched ? `url(#hatch-diag-${key})` : conf.fill,
+            fillOpacity: conf.fillEnabled ? (conf.hatched ? 1 : 0.2) : 0
         };
-    });
+    };
 
     // Filter features into groups
     state.vectorLayers.streets = L.geoJSON(state.vectorData, {
         filter: feature => !!feature.properties.highway,
-        style: styles.streets,
+        style: getStyle('streets'),
         onEachFeature: (feature, layer) => {
-            // Label Logic: Only show if enabled AND Zoom is high enough (>= 16)
-            // This prevents freezing when showing thousands of labels
             if (state.activeLayers.streets.labelsEnabled &&
                 feature.properties.name &&
                 state.map.getZoom() >= 16) {
@@ -533,23 +652,37 @@ function renderVectorLayers() {
         }
     });
 
+    state.vectorLayers.railways = L.geoJSON(state.vectorData, {
+        filter: feature => !!feature.properties.railway,
+        style: getStyle('railways')
+    });
+
     state.vectorLayers.water = L.geoJSON(state.vectorData, {
-        filter: feature => !!feature.properties.waterway || (feature.properties.natural === 'water'),
-        style: styles.water
+        filter: feature => !!feature.properties.waterway || (feature.properties.natural === 'water') || (feature.properties.landuse === 'reservoir'),
+        style: getStyle('water')
     });
 
     state.vectorLayers.buildings = L.geoJSON(state.vectorData, {
         filter: feature => !!feature.properties.building,
-        style: styles.buildings
+        style: getStyle('buildings')
     });
 
     state.vectorLayers.parks = L.geoJSON(state.vectorData, {
         filter: feature => {
-            const l = feature.properties.leisure;
-            const lu = feature.properties.landuse;
-            return l === 'park' || l === 'garden' || lu === 'grass' || lu === 'forest';
+            const p = feature.properties;
+            return p.leisure === 'park' || p.leisure === 'garden' || p.landuse === 'grass' || p.landuse === 'forest' || p.natural === 'wood' || p.natural === 'scrub' || p.landuse === 'orchard' || p.landuse === 'vineyard';
         },
-        style: styles.parks
+        style: getStyle('parks')
+    });
+
+    state.vectorLayers.industrial = L.geoJSON(state.vectorData, {
+        filter: feature => feature.properties.landuse === 'industrial' || feature.properties.landuse === 'commercial',
+        style: getStyle('industrial')
+    });
+
+    state.vectorLayers.parking = L.geoJSON(state.vectorData, {
+        filter: feature => feature.properties.amenity === 'parking',
+        style: getStyle('parking')
     });
 
     updateVectorVisibility();
@@ -632,26 +765,36 @@ async function exportMap() {
             }
 
             // Group paths
-            const groups = { streets: [], water: [], buildings: [], parks: [] };
+            const groups = { streets: [], water: [], buildings: [], parks: [], railways: [], industrial: [], parking: [] };
 
             geoJsonData.features.forEach(f => {
                 const props = f.properties;
                 const path = geometryToPath(f.geometry, bounds, widthMm, heightMm);
                 if (!path) return;
 
-                if (props.highway && state.activeLayers.streets.visible) {
-                    groups.streets.push(`<path id="s_${f.id.replace(/\//g, '_')}" d="${path}" />`);
-                }
-                else if ((props.waterway || props.natural === 'water') && state.activeLayers.water.visible) groups.water.push(`<path d="${path}" />`);
+                if (props.highway && state.activeLayers.streets.visible) groups.streets.push(`<path d="${path}" />`);
+                else if (props.railway && state.activeLayers.railways.visible) groups.railways.push(`<path d="${path}" />`);
+                else if ((props.waterway || props.natural === 'water' || props.landuse === 'reservoir') && state.activeLayers.water.visible) groups.water.push(`<path d="${path}" />`);
                 else if (props.building && state.activeLayers.buildings.visible) groups.buildings.push(`<path d="${path}" />`);
-                else if ((props.leisure === 'park' || props.leisure === 'garden') && state.activeLayers.parks.visible) groups.parks.push(`<path d="${path}" />`);
+                else if ((props.leisure === 'park' || props.leisure === 'garden' || props.landuse === 'grass' || props.landuse === 'forest' || props.natural === 'wood' || props.natural === 'scrub' || props.landuse === 'orchard' || props.landuse === 'vineyard') && state.activeLayers.parks.visible) groups.parks.push(`<path d="${path}" />`);
+                else if ((props.landuse === 'industrial' || props.landuse === 'commercial') && state.activeLayers.industrial.visible) groups.industrial.push(`<path d="${path}" />`);
+                else if (props.amenity === 'parking' && state.activeLayers.parking.visible) groups.parking.push(`<path d="${path}" />`);
             });
 
             // Helper to get attrs
             const getAttrs = (k) => {
                 const c = state.activeLayers[k];
-                return `stroke="${c.stroke}" stroke-width="${c.width}" fill="${c.fillEnabled ? c.fill : 'none'}" fill-opacity="${c.fillEnabled ? 0.2 : 0}"`;
+                const fill = c.hatched ? `url(#hatch-diag-${k})` : (c.fillEnabled ? c.fill : 'none');
+                return `stroke="${c.stroke}" stroke-width="${c.width}" fill="${fill}" fill-opacity="${c.fillEnabled ? (c.hatched ? 1 : 0.2) : 0}"`;
             };
+
+            // Pattern defs for export
+            const patternsSvg = Object.keys(state.activeLayers)
+                .filter(k => state.activeLayers[k].hatched)
+                .map(k => {
+                    const c = state.activeLayers[k];
+                    return `<pattern id="hatch-diag-${k}" patternUnits="userSpaceOnUse" width="4" height="4" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="4" stroke="${c.fill}" stroke-width="1"/></pattern>`;
+                }).join('\n');
 
             // Street Labels SVG
             const labelsSvg = [];
@@ -676,12 +819,16 @@ async function exportMap() {
             <clipPath id="mapClip">
                 <rect x="0" y="0" width="${widthMm}" height="${heightMm}" rx="${radiusMm}" ry="${radiusMm}" />
             </clipPath>
+            ${patternsSvg}
         </defs>
         <rect x="0" y="0" width="${widthMm}" height="${heightMm}" rx="${radiusMm}" ry="${radiusMm}" fill="${state.settings.backgroundColor}" />
         <g clip-path="url(#mapClip)">
+            <g id="Industrial" ${getAttrs('industrial')}>${groups.industrial.join('')}</g>
+            <g id="Parking" ${getAttrs('parking')}>${groups.parking.join('')}</g>
             <g id="Parks" ${getAttrs('parks')}>${groups.parks.join('')}</g>
             <g id="Water" ${getAttrs('water')}>${groups.water.join('')}</g>
             <g id="Buildings" ${getAttrs('buildings')}>${groups.buildings.join('')}</g>
+            <g id="Railways" ${getAttrs('railways')}>${groups.railways.join('')}</g>
             <g id="Streets" ${getAttrs('streets')}>${groups.streets.join('')}</g>
             <g id="Labels">${labelsSvg.join('')}</g>
             <g id="Markers">${markerSvg}</g>
@@ -805,5 +952,109 @@ async function exportJpg() {
     } finally {
         btn.innerText = originalText;
         btn.disabled = false;
+    }
+} function applyGraphicTheme(themeId) {
+    const themes = {
+        industrial: {
+            style: 'standard',
+            bg: '#0f172a',
+            layers: {
+                buildings: { stroke: '#f97316', width: 0.5, fill: '#f97316', fillEnabled: true, hatched: true },
+                water: { stroke: '#1e293b', width: 1, fill: '#1e293b', fillEnabled: true, hatched: false },
+                streets: { stroke: '#475569', width: 1.2, fill: '#ffffff', fillEnabled: false, hatched: false },
+                parks: { stroke: '#064e3b', width: 0, fill: '#064e3b', fillEnabled: true, hatched: false },
+                railways: { stroke: '#facc15', width: 2, fill: '#000000', fillEnabled: false, hatched: false },
+                industrial: { visible: true, stroke: '#475569', width: 0.5, fill: '#334155', fillEnabled: true, hatched: true }
+            }
+        },
+        blueprint: {
+            style: 'blueprint',
+            bg: '#000044',
+            layers: {
+                buildings: { stroke: '#ffffff', width: 0.8, fill: '#ffffff', fillEnabled: false, hatched: false },
+                water: { stroke: '#00ffff', width: 1, fill: '#00ffff', fillEnabled: true, hatched: true },
+                streets: { stroke: '#ffffff', width: 1.5, fill: '#ffffff', fillEnabled: false, hatched: false },
+                parks: { stroke: '#00aa00', width: 0.5, fill: '#00aa00', fillEnabled: false, hatched: false },
+                railways: { stroke: '#ffffff', width: 1, fill: '#ffffff', fillEnabled: false, hatched: false },
+                industrial: { visible: false, stroke: '#ffffff', width: 0.5, fill: '#ffffff', fillEnabled: false, hatched: false }
+            }
+        },
+        nature: {
+            style: 'line',
+            bg: '#fcfaf2',
+            layers: {
+                buildings: { stroke: '#8b4513', width: 0.5, fill: '#d2b48c', fillEnabled: true, hatched: false },
+                water: { stroke: '#4682b4', width: 1.5, fill: '#b0c4de', fillEnabled: true, hatched: false },
+                streets: { stroke: '#555555', width: 0.8, fill: '#ffffff', fillEnabled: false, hatched: false },
+                parks: { stroke: '#228b22', width: 0, fill: '#228b22', fillEnabled: true, hatched: true },
+                railways: { stroke: '#333333', width: 1, fill: '#000000', fillEnabled: false, hatched: false },
+                industrial: { visible: false, stroke: '#94a3b8', width: 0.5, fill: '#cbd5e1', fillEnabled: false, hatched: false }
+            }
+        },
+        gold: {
+            style: 'standard',
+            bg: '#000000',
+            layers: {
+                buildings: { stroke: '#d4af37', width: 1.2, fill: '#d4af37', fillEnabled: true, hatched: false },
+                water: { stroke: '#111111', width: 2, fill: '#111111', fillEnabled: true, hatched: false },
+                streets: { stroke: '#d4af37', width: 0.5, fill: '#ffffff', fillEnabled: false, hatched: false },
+                parks: { stroke: '#d4af37', width: 0.3, fill: '#000000', fillEnabled: true, hatched: true },
+                railways: { stroke: '#d4af37', width: 0.5, fill: '#000000', fillEnabled: false, hatched: false },
+                industrial: { visible: false, stroke: '#d4af37', width: 0.5, fill: '#000000', fillEnabled: false, hatched: false }
+            }
+        }
+    };
+
+    const t = themes[themeId];
+    if (!t) return;
+
+    // Apply Base Style
+    document.getElementById('map-style-select').value = t.style;
+    setMapStyle(t.style);
+
+    // Apply Background
+    document.getElementById('map-bg-color').value = t.bg;
+    state.settings.backgroundColor = t.bg;
+    document.getElementById('map-wrapper').style.backgroundColor = t.bg;
+
+    // Apply Layers
+    Object.keys(t.layers).forEach(key => {
+        const conf = t.layers[key];
+        Object.assign(state.activeLayers[key], conf);
+
+        // Update UI inputs to match
+        if (conf.visible !== undefined) document.getElementById(`layer-${key}-visible`).checked = conf.visible;
+        if (conf.stroke) document.getElementById(`layer-${key}-stroke`).value = conf.stroke;
+        if (conf.width !== undefined) document.getElementById(`layer-${key}-width`).value = conf.width;
+        if (conf.fill) document.getElementById(`layer-${key}-fill`).value = conf.fill;
+        if (conf.fillEnabled !== undefined) document.getElementById(`layer-${key}-fill-enabled`).checked = conf.fillEnabled;
+        if (conf.hatched !== undefined) {
+            const hb = document.getElementById(`layer-${key}-hatched`);
+            if (hb) hb.checked = conf.hatched;
+        }
+    });
+
+    // Refresh Map
+    if (state.vectorMode) {
+        renderVectorLayers();
+    } else {
+        // If not in vector mode, maybe turn it on? 
+        // User probably expects the theme to work, so let's enable vector mode.
+        document.getElementById('vector-mode-toggle').checked = true;
+        state.vectorMode = true;
+
+        // Trigger same logic as toggle
+        const layerList = document.getElementById('layer-toggles');
+        const styleSelect = document.getElementById('map-style-select');
+        const exportBtn = document.getElementById('export-btn');
+        layerList.classList.remove('disabled');
+        styleSelect.disabled = true;
+        exportBtn.innerText = "Export Laser (SVG)";
+
+        if (state.map.getZoom() < 15) {
+            state.map.flyTo(state.map.getCenter(), 15);
+        } else {
+            fetchAndRenderVectors();
+        }
     }
 }

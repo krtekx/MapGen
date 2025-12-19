@@ -11,6 +11,8 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700&family=Playfair+Display:wght@400;700&family=Source+Code+Pro:wght@400;600&display=swap"
         rel="stylesheet">
+  <script type="module" crossorigin src="/assets/index-CCx4N67D.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-DsjZYBfN.css">
 </head>
 
 <body>
@@ -44,24 +46,11 @@
                 <h2>Map Style</h2>
                 <div class="input-group">
                     <select id="map-style-select">
-                        <option value="standard">Midnight (Standard)</option>
-                        <option value="light">Arctic (Light)</option>
-                        <option value="vintage">Vintage / Sepia</option>
-                        <option value="blueprint">Blueprint / Technical</option>
-                        <option value="satellite">Satellite Imagery</option>
-                        <option value="topo">Topographic (Terrain)</option>
-                        <option value="line">Line Art / Sketch</option>
+                        <option value="standard">Standard (Dark Carto)</option>
+                        <option value="light">Light (Clean)</option>
+                        <option value="grey">Shades of Grey</option>
+                        <option value="line">Line Graphic / Sketch</option>
                     </select>
-                </div>
-            </div>
-
-            <div class="section theme-section">
-                <h2>Graphic Themes</h2>
-                <div class="presets themes">
-                    <button class="chip theme-btn" data-theme="industrial">Industrial</button>
-                    <button class="chip theme-btn" data-theme="blueprint">Blueprint</button>
-                    <button class="chip theme-btn" data-theme="nature">Nature</button>
-                    <button class="chip theme-btn" data-theme="gold">Gold-Black</button>
                 </div>
             </div>
 
@@ -97,7 +86,6 @@
                                     <input type="color" id="layer-buildings-fill" value="#64748b">
                                     <input type="checkbox" id="layer-buildings-fill-enabled" checked
                                         title="Enable Fill">
-                                    <input type="checkbox" id="layer-buildings-hatched" title="Hatched Fil">
                                 </div>
                             </div>
                         </div>
@@ -123,7 +111,6 @@
                                 <div class="row-inputs">
                                     <input type="color" id="layer-water-fill" value="#3b82f6">
                                     <input type="checkbox" id="layer-water-fill-enabled" checked title="Enable Fill">
-                                    <input type="checkbox" id="layer-water-hatched" title="Hatched Fill">
                                 </div>
                             </div>
                         </div>
@@ -149,7 +136,6 @@
                                 <div class="row-inputs">
                                     <input type="color" id="layer-streets-fill" value="#ffffff">
                                     <input type="checkbox" id="layer-streets-fill-enabled" title="Enable Fill">
-                                    <input type="checkbox" id="layer-streets-hatched" title="Hatched Fill">
                                 </div>
                             </div>
                         </div>
@@ -166,7 +152,7 @@
                     <div class="layer-item">
                         <div class="layer-header">
                             <input type="checkbox" id="layer-parks-visible" checked>
-                            <label for="layer-parks-visible">Parks & Nature</label>
+                            <label for="layer-parks-visible">Parks</label>
                         </div>
                         <div class="layer-controls">
                             <div class="control-group">
@@ -182,84 +168,6 @@
                                 <div class="row-inputs">
                                     <input type="color" id="layer-parks-fill" value="#22c55e">
                                     <input type="checkbox" id="layer-parks-fill-enabled" checked title="Enable Fill">
-                                    <input type="checkbox" id="layer-parks-hatched" title="Hatched Fill">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Layer: Railways -->
-                    <div class="layer-item">
-                        <div class="layer-header">
-                            <input type="checkbox" id="layer-railways-visible" checked>
-                            <label for="layer-railways-visible">Railways</label>
-                        </div>
-                        <div class="layer-controls">
-                            <div class="control-group">
-                                <label>Stroke</label>
-                                <div class="row-inputs">
-                                    <input type="color" id="layer-railways-stroke" value="#475569">
-                                    <input type="number" id="layer-railways-width" value="1.5" min="0" step="0.1"
-                                        class="w-num">
-                                </div>
-                            </div>
-                            <div class="control-group" style="opacity: 0.5; pointer-events: none;">
-                                <label>Fill</label>
-                                <div class="row-inputs">
-                                    <input type="color" id="layer-railways-fill" value="#000000">
-                                    <input type="checkbox" id="layer-railways-fill-enabled">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Layer: Industrial -->
-                    <div class="layer-item">
-                        <div class="layer-header">
-                            <input type="checkbox" id="layer-industrial-visible">
-                            <label for="layer-industrial-visible">Industrial</label>
-                        </div>
-                        <div class="layer-controls">
-                            <div class="control-group">
-                                <label>Stroke</label>
-                                <div class="row-inputs">
-                                    <input type="color" id="layer-industrial-stroke" value="#94a3b8">
-                                    <input type="number" id="layer-industrial-width" value="0.5" min="0" step="0.1"
-                                        class="w-num">
-                                </div>
-                            </div>
-                            <div class="control-group">
-                                <label>Fill</label>
-                                <div class="row-inputs">
-                                    <input type="color" id="layer-industrial-fill" value="#cbd5e1">
-                                    <input type="checkbox" id="layer-industrial-fill-enabled" title="Enable Fill">
-                                    <input type="checkbox" id="layer-industrial-hatched" title="Hatched Fill">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Layer: Parking -->
-                    <div class="layer-item">
-                        <div class="layer-header">
-                            <input type="checkbox" id="layer-parking-visible">
-                            <label for="layer-parking-visible">Parking</label>
-                        </div>
-                        <div class="layer-controls">
-                            <div class="control-group">
-                                <label>Stroke</label>
-                                <div class="row-inputs">
-                                    <input type="color" id="layer-parking-stroke" value="#94a3b8">
-                                    <input type="number" id="layer-parking-width" value="0.5" min="0" step="0.1"
-                                        class="w-num">
-                                </div>
-                            </div>
-                            <div class="control-group">
-                                <label>Fill</label>
-                                <div class="row-inputs">
-                                    <input type="color" id="layer-parking-fill" value="#e2e8f0">
-                                    <input type="checkbox" id="layer-parking-fill-enabled" title="Enable Fill">
-                                    <input type="checkbox" id="layer-parking-hatched" title="Hatched Fil">
                                 </div>
                             </div>
                         </div>
@@ -324,7 +232,7 @@
             </div>
 
             <div class="section marker-section">
-                <h2>Pins & Labels</h2>
+                <h2>Add Marker</h2>
                 <div class="input-group">
                     <div class="search-box">
                         <input type="text" id="marker-text" placeholder="Label text...">
@@ -337,11 +245,8 @@
                         </button>
                     </div>
                 </div>
-                <div id="marker-list" class="marker-list">
-                    <!-- Individual markers will be injected here -->
-                </div>
                 <div class="tip-text">
-                    <small>Pin will appear at center. Drag it to position.</small>
+                    <small>Pin will appear at center.</small>
                 </div>
             </div>
 
@@ -364,24 +269,6 @@
         </main>
     </div>
 
-    <!-- SVG Patterns for Hatching -->
-    <svg width="0" height="0" style="position:absolute;z-index:-1;">
-        <defs>
-            <pattern id="hatch-diagonal" patternUnits="userSpaceOnUse" width="4" height="4"
-                patternTransform="rotate(45)">
-                <line x1="0" y1="0" x2="0" y2="4" stroke="black" stroke-width="1" />
-            </pattern>
-            <pattern id="hatch-cross" patternUnits="userSpaceOnUse" width="6" height="6">
-                <line x1="0" y1="0" x2="0" y2="6" stroke="black" stroke-width="1" />
-                <line x1="0" y1="0" x2="6" y2="0" stroke="black" stroke-width="1" />
-            </pattern>
-            <pattern id="hatch-dots" patternUnits="userSpaceOnUse" width="4" height="4">
-                <circle cx="2" cy="2" r="1" fill="black" />
-            </pattern>
-        </defs>
-    </svg>
-
-    <script type="module" src="/main.js"></script>
 </body>
 
 </html>

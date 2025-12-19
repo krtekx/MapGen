@@ -6,8 +6,9 @@ const chokidar = require('chokidar');
 const DEFAULT_CONFIG = {
     productionFile: 'public/production.json',
     trackingStateFile: '.tracking-state.json',
-    watchDirs: ['src', 'public'],
-    inactivityTimeout: 2 * 60 * 1000, // 2 minutes
+    watchDirs: ['.'],
+    ignoredPaths: [/(^|[\/\\])\../, 'node_modules', 'dist', '_legacy_src'],
+    inactivityTimeout: 30 * 60 * 1000, // 30 minutes
     saveInterval: 10 * 1000, // 10 seconds
     promptThreshold: 50,
     rulesFile: 'antigravity-tracker/antigravity_rules.txt',
@@ -125,11 +126,8 @@ class AntigravityTracker {
 
         console.log('🟢 Tracking started');
 
-        this.saveTimer = setInterval(() => {
-            if (this.isTracking) {
-                this.updateProductionData();
-            }
-        }, this.config.saveInterval);
+        // Removed save interval to avoid Dropbox sync conflicts.
+        // Files will be updated on prompt detection or when tracking stops.
 
         this.resetInactivityTimer();
     }
@@ -233,6 +231,7 @@ class AntigravityTracker {
         if (this.analyzeFileChange(filePath)) {
             this.sessionPrompts++;
             console.log(`📝 Prompt detected (total this session: ${this.sessionPrompts})`);
+            this.updateProductionData(); // Update immediately on prompt detection
         }
     }
 
@@ -254,7 +253,7 @@ class AntigravityTracker {
         const watchPaths = [...this.config.watchDirs, this.config.rulesFile];
 
         const watcher = chokidar.watch(watchPaths, {
-            ignored: /(^|[\/\\])\../,
+            ignored: this.config.ignoredPaths,
             persistent: true,
             ignoreInitial: true
         });

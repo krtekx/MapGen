@@ -1,6 +1,6 @@
 {
   "name": "mapgen",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "type": "module",
   "description": "",
   "main": "index.js",
@@ -10,7 +10,9 @@
     "preview": "vite preview",
     "test": "echo \"Error: no test specified\" && exit 1",
     "track": "node antigravity-tracker/tracker.cjs",
-    "track:stop": "taskkill /F /IM node.exe /FI \"WINDOWTITLE eq tracker.cjs\" || echo No tracking process found"
+    "track:stop": "taskkill /F /IM node.exe /FI \"WINDOWTITLE eq tracker.cjs\" || echo No tracking process found",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d dist"
   },
   "keywords": [],
   "author": "",
@@ -22,5 +24,8 @@
     "osmtogeojson": "^3.0.0-beta.5",
     "readdirp": "^4.1.2",
     "vite": "^6.0.0"
+  },
+  "devDependencies": {
+    "gh-pages": "^6.3.0"
   }
 }
