@@ -26,8 +26,8 @@ const state = {
     activeLayers: {
         streets: { visible: true, stroke: '#333333', width: 1, fill: '#ffffff', fillEnabled: false, hatched: false, labelsEnabled: false, laserMode: 'score', power: 20, speed: 100 },
         water: { visible: true, stroke: '#3b82f6', width: 1, fill: '#3b82f6', fillEnabled: true, hatched: false, laserMode: 'engrave', power: 15, speed: 150 },
-        buildings: { visible: true, stroke: '#64748b', width: 1, fill: '#64748b', fillEnabled: true, hatched: false, laserMode: 'engrave', power: 10, speed: 200 },
-        parks: { visible: true, stroke: '#22c55e', width: 0, fill: '#22c55e', fillEnabled: true, hatched: false, laserMode: 'engrave', power: 10, speed: 200 },
+        buildings: { visible: true, stroke: '#64748b', width: 1, fill: '#64748b', fillEnabled: true, hatched: false, hatchStyle: 'lines', hatchScale: 1, hatchRotation: 45, laserMode: 'engrave', power: 10, speed: 200 },
+        parks: { visible: true, stroke: '#22c55e', width: 0, fill: '#22c55e', fillEnabled: true, hatched: false, hatchStyle: 'lines', hatchScale: 1, hatchRotation: 45, laserMode: 'engrave', power: 10, speed: 200 },
         railways: { visible: true, stroke: '#475569', width: 1.5, fill: '#000000', fillEnabled: false, hatched: false, laserMode: 'score', power: 30, speed: 80 },
         industrial: { visible: false, stroke: '#94a3b8', width: 0.5, fill: '#cbd5e1', fillEnabled: false, hatched: false, laserMode: 'engrave', power: 10, speed: 200 },
         parking: { visible: false, stroke: '#94a3b8', width: 0.5, fill: '#e2e8f0', fillEnabled: false, hatched: false, laserMode: 'engrave', power: 10, speed: 200 }
@@ -280,6 +280,19 @@ function setupControls() {
         if (hatchedBtn) hatchedBtn.addEventListener('change', (e) => {
             state.activeLayers[layer].hatched = e.target.checked;
             updateStyle();
+            if (state.vectorMode) renderVectorLayers(); // Force re-render of patterns
+        });
+
+        // Hatch Patterns
+        ['hatch-style', 'hatch-scale', 'hatch-rotation'].forEach(prop => {
+            const el = document.getElementById(`layer-${layer}-${prop}`);
+            if (el) {
+                el.addEventListener('input', (e) => {
+                    const camelProp = prop.replace(/-([a-z])/g, (g) => g[1].toUpperCase());
+                    state.activeLayers[layer][camelProp] = e.target.value;
+                    if (state.vectorMode) renderVectorLayers();
+                });
+            }
         });
 
         // Laser Settings
@@ -636,25 +649,59 @@ function renderVectorLayers() {
     Object.keys(state.activeLayers).forEach(key => {
         const conf = state.activeLayers[key];
         if (conf.hatched) {
-            let pattern = document.getElementById(`hatch-diag-${key}`);
-            if (!pattern) {
-                pattern = document.createElementNS('http://www.w3.org/2000/svg', 'pattern');
-                pattern.setAttribute('id', `hatch-diag-${key}`);
-                pattern.setAttribute('patternUnits', 'userSpaceOnUse');
-                pattern.setAttribute('width', '10');
-                pattern.setAttribute('height', '10');
-                pattern.setAttribute('patternTransform', 'rotate(45)');
-                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-                line.setAttribute('x1', '0');
-                line.setAttribute('y1', '0');
-                line.setAttribute('x2', '0');
-                line.setAttribute('y2', '10');
-                line.setAttribute('stroke-width', '2');
-                pattern.appendChild(line);
-                defs.appendChild(pattern);
+            const patternId = `hatch-diag-${key}`;
+            let pattern = document.getElementById(patternId);
+            if (pattern) pattern.remove(); // Recreate to update style/transform
+
+            pattern = document.createElementNS('http://www.w3.org/2000/svg', 'pattern');
+            pattern.setAttribute('id', patternId);
+            pattern.setAttribute('patternUnits', 'userSpaceOnUse');
+
+            const size = 10 * (conf.hatchScale || 1);
+            pattern.setAttribute('width', size);
+            pattern.setAttribute('height', size);
+            pattern.setAttribute('patternTransform', `rotate(${conf.hatchRotation || 0})`);
+
+            const createLine = (x1, y1, x2, y2, dash = '') => {
+                const l = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                l.setAttribute('x1', x1); l.setAttribute('y1', y1);
+                l.setAttribute('x2', x2); l.setAttribute('y2', y2);
+                l.setAttribute('stroke', conf.fill);
+                l.setAttribute('stroke-width', '1');
+                if (dash) l.setAttribute('stroke-dasharray', dash);
+                return l;
+            };
+
+            switch (conf.hatchStyle) {
+                case 'grid':
+                    pattern.appendChild(createLine(0, 0, 0, size));
+                    pattern.appendChild(createLine(0, 0, size, 0));
+                    break;
+                case 'dots':
+                    const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                    circle.setAttribute('cx', size / 2);
+                    circle.setAttribute('cy', size / 2);
+                    circle.setAttribute('r', size / 4);
+                    circle.setAttribute('fill', conf.fill);
+                    pattern.appendChild(circle);
+                    break;
+                case 'dashed':
+                    pattern.appendChild(createLine(0, 0, 0, size, `${size / 2},${size / 2}`));
+                    break;
+                case 'zigzag':
+                    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                    path.setAttribute('d', `M 0 ${size} L ${size / 2} 0 L ${size} ${size}`);
+                    path.setAttribute('fill', 'none');
+                    path.setAttribute('stroke', conf.fill);
+                    path.setAttribute('stroke-width', '1');
+                    pattern.appendChild(path);
+                    break;
+                case 'lines':
+                default:
+                    pattern.appendChild(createLine(0, 0, 0, size));
+                    break;
             }
-            // Update patterns stroke color
-            pattern.querySelector('line').setAttribute('stroke', conf.fill);
+            defs.appendChild(pattern);
         }
     });
 
@@ -839,8 +886,29 @@ async function exportMap(isXtool = false) {
             const patternsSvg = Object.keys(state.activeLayers)
                 .filter(k => state.activeLayers[k].hatched)
                 .map(k => {
-                    const c = state.activeLayers[k];
-                    return `<pattern id="hatch-diag-${k}" patternUnits="userSpaceOnUse" width="4" height="4" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="4" stroke="${c.fill}" stroke-width="1"/></pattern>`;
+                    const conf = state.activeLayers[k];
+                    const size = 4 * (conf.hatchScale || 1); // Use smaller base size for export (PDF/SVG)
+                    let content = '';
+
+                    switch (conf.hatchStyle) {
+                        case 'grid':
+                            content = `<line x1="0" y1="0" x2="0" y2="${size}" stroke="${conf.fill}" stroke-width="0.5"/><line x1="0" y1="0" x2="${size}" y2="0" stroke="${conf.fill}" stroke-width="0.5"/>`;
+                            break;
+                        case 'dots':
+                            content = `<circle cx="${size / 2}" cy="${size / 2}" r="${size / 4}" fill="${conf.fill}"/>`;
+                            break;
+                        case 'dashed':
+                            content = `<line x1="0" y1="0" x2="0" y2="${size}" stroke="${conf.fill}" stroke-width="0.5" stroke-dasharray="${size / 2},${size / 2}"/>`;
+                            break;
+                        case 'zigzag':
+                            content = `<path d="M 0 ${size} L ${size / 2} 0 L ${size} ${size}" fill="none" stroke="${conf.fill}" stroke-width="0.5"/>`;
+                            break;
+                        case 'lines':
+                        default:
+                            content = `<line x1="0" y1="0" x2="0" y2="${size}" stroke="${conf.fill}" stroke-width="0.5"/>`;
+                            break;
+                    }
+                    return `<pattern id="hatch-diag-${k}" patternUnits="userSpaceOnUse" width="${size}" height="${size}" patternTransform="rotate(${conf.hatchRotation || 0})">${content}</pattern>`;
                 }).join('\n');
 
             // Street Labels SVG
