@@ -22,775 +22,812 @@
                     <polyline points="15 18 9 12 15 6"></polyline>
                 </svg>
             </button>
-            <div class="header">
-                <div class="title-wrap">
-                    <h1>MAP<span>GEN</span></h1>
-                    <div class="version-badge">
-                        <span class="v-num">v1.6.4</span>
-                        <span class="v-date">Dec 19, 2025</span>
+            <div class="pinned-section">
+                <div class="header">
+                    <div class="title-wrap">
+                        <h1>MAP<span>GEN</span></h1>
+                        <div class="version-badge">
+                            <span class="v-num">v1.7.0</span>
+                            <span class="v-date">Dec 19, 2025</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section status-section">
+                    <!-- Status Terminal -->
+                    <div id="status-terminal" class="status-terminal">
+                        <div class="terminal-line">> System ready.</div>
+                    </div>
+                    <!-- Progress Bar -->
+                    <div class="progress-container">
+                        <div id="progress-bar" class="progress-bar" style="width: 0%"></div>
+                    </div>
+                    <div class="status-meta">
+                        <span id="status-memory">Mem: 0 MB</span>
+                        <span id="status-zoom">Zoom: --</span>
                     </div>
                 </div>
             </div>
 
-            <div class="section status-section">
-                <!-- Status Terminal -->
-                <div id="status-terminal" class="status-terminal">
-                    <div class="terminal-line">> System ready.</div>
-                </div>
-                <!-- Progress Bar -->
-                <div class="progress-container">
-                    <div id="progress-bar" class="progress-bar" style="width: 0%"></div>
-                </div>
-                <div class="status-meta">
-                    <span id="status-memory">Mem: 0 MB</span>
-                    <span id="status-zoom">Zoom: --</span>
-                </div>
-            </div>
+            <div class="scrollable-content">
 
-            <div class="section search-section">
-                <label for="address-input">Location</label>
-                <div class="search-box">
-                    <input type="text" id="address-input" placeholder="Enter city, address...">
-                    <button id="search-btn">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2">
-                            <circle cx="11" cy="11" r="8"></circle>
-                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                        </svg>
-                    </button>
-                </div>
-            </div>
-
-            <div class="section style-section">
-                <h2>Map Style</h2>
-                <div id="map-style-grid" class="style-grid">
-                    <button class="style-btn active" data-val="standard">Midnight</button>
-                    <button class="style-btn" data-val="light">Arctic</button>
-                    <button class="style-btn" data-val="satellite">Satellite</button>
-                    <button class="style-btn" data-val="night">Voyager</button>
-                </div>
-            </div>
-
-            <div class="section theme-section">
-                <h2>Graphic Themes</h2>
-                <div class="presets themes">
-                    <button class="chip theme-btn" data-theme="industrial">Industrial</button>
-                    <button class="chip theme-btn" data-theme="blueprint">Blueprint</button>
-                    <button class="chip theme-btn" data-theme="nature">Nature</button>
-                    <button class="chip theme-btn" data-theme="gold">Gold-Black</button>
-                </div>
-            </div>
-
-            <div class="section layers-section">
-                <h2>Vector Layers (BETA)</h2>
-                <div class="row-center" style="margin-bottom: 10px; gap: 15px; flex-wrap: wrap;">
-                    <div class="mode-item">
-                        <label class="switch">
-                            <input type="checkbox" id="vector-mode-toggle">
-                            <span class="slider round"></span>
-                        </label>
-                        <span style="font-weight: 500; margin-left: 8px;">Vector</span>
-                    </div>
-                    <div class="mode-item">
-                        <label class="switch">
-                            <input type="checkbox" id="black-mode-toggle">
-                            <span class="slider round"></span>
-                        </label>
-                        <span style="font-weight: 500; margin-left: 8px;">Black</span>
-                    </div>
-                    <div class="mode-item">
-                        <label class="switch">
-                            <input type="checkbox" id="grayscale-mode-toggle">
-                            <span class="slider round"></span>
-                        </label>
-                        <span style="font-weight: 500; margin-left: 8px;">Grayscale</span>
-                    </div>
-                </div>
-
-                <div id="layer-toggles" class="layer-list disabled">
-                    <!-- Grid Headers -->
-                    <div class="layer-headers">
-                        <div class="col-header left">Layer</div>
-                        <div class="col-header">Stroke</div>
-                        <div class="col-header">Fill</div>
-                        <div class="col-header">Hatch</div>
-                        <div class="col-header">Laser (M/P/S)</div>
-                    </div>
-
-                    <!-- Layer: Buildings -->
-                    <div class="layer-compact-row">
-                        <div class="layer-name-col">
-                            <input type="checkbox" id="layer-buildings-visible" class="compact-check" checked>
-                            <label for="layer-buildings-visible" title="Buildings">Build</label>
-                        </div>
-                        <div class="layer-stroke-col">
-                            <input type="color" id="layer-buildings-stroke" value="#64748b" class="mini-color"
-                                title="Stroke Color">
-                            <input type="number" id="layer-buildings-width" value="1" min="0" step="0.1"
-                                class="input-compact mini-num" title="Stroke Width">
-                        </div>
-                        <div class="layer-fill-col">
-                            <input type="color" id="layer-buildings-fill" value="#64748b" class="mini-color"
-                                title="Fill Color">
-                            <input type="checkbox" id="layer-buildings-fill-enabled" class="compact-check" checked
-                                title="Enable Fill">
-                        </div>
-                        <div class="layer-hatch-col">
-                            <input type="checkbox" id="layer-buildings-hatched" class="compact-check"
-                                title="Use Pattern">
-                            <button id="layer-buildings-hatch-trigger" class="hatch-settings-trigger" title="Settings">
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2">
-                                    <circle cx="12" cy="12" r="3"></circle>
-                                    <path
-                                        d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
-                                    </path>
-                                </svg>
-                            </button>
-                        </div>
-                        <div class="layer-laser-col">
-                            <select id="layer-buildings-laser-mode" class="input-compact mini-select"
-                                style="width:40px;">
-                                <option value="engrave" selected>Eng</option>
-                                <option value="score">Sco</option>
-                                <option value="cut">Cut</option>
-                            </select>
-                            <input type="number" id="layer-buildings-power" value="10" class="input-compact mini-num"
-                                title="Power">
-                            <input type="number" id="layer-buildings-speed" value="200" class="input-compact mini-num"
-                                title="Speed">
-                        </div>
-
-                        <div id="layer-buildings-hatch-settings" class="layer-extended-settings">
-                            <div class="hatch-row-full">
-                                <label>Pattern Style</label>
-                                <select id="layer-buildings-hatch-style" class="input-compact full-width-select">
-                                    <option value="lines">Diagonal (Right)</option>
-                                    <option value="lines-left">Diagonal (Left)</option>
-                                    <option value="horizontal">Horizontal</option>
-                                    <option value="vertical">Vertical</option>
-                                    <option value="grid">Grid (Square)</option>
-                                    <option value="crosshatch">Crosshatch</option>
-                                    <option value="dots">Dots (Small)</option>
-                                    <option value="dots-large">Dots (Large)</option>
-                                    <option value="hexagons">Hexagons</option>
-                                    <option value="bricks">Bricks</option>
-                                    <option value="waves">Waves</option>
-                                    <option value="zigzag">Zigzag</option>
-                                    <option value="dashed">Dashed Lines</option>
-                                    <option value="stars">Stars</option>
-                                    <option value="squares">Squares</option>
-                                    <option value="text">Custom Text</option>
-                                </select>
-                            </div>
-                            <div class="hatch-row-full hatch-text-row" style="display:none;"
-                                id="layer-buildings-hatch-text-row">
-                                <label>Hatch Text</label>
-                                <input type="text" id="layer-buildings-hatch-text" value="MAP"
-                                    class="input-compact full-width-input">
-                            </div>
-                            <div class="hatch-row-full compact-row-inputs">
-                                <div class="col-half">
-                                    <label>Color</label>
-                                    <input type="color" id="layer-buildings-hatch-color" value="#000000"
-                                        class="mini-color full-width-input">
-                                </div>
-                                <div class="col-half">
-                                    <label>Stroke</label>
-                                    <input type="number" id="layer-buildings-hatch-width" value="1" step="0.1" min="0.1"
-                                        class="input-compact full-width-input">
-                                </div>
-                            </div>
-                            <div class="hatch-row-full">
-                                <label>Scale</label>
-                                <div class="slider-with-input">
-                                    <input type="range" id="layer-buildings-hatch-scale" min="0.1" max="5" step="0.1"
-                                        value="1" class="full-width-slider">
-                                    <input type="number" id="layer-buildings-hatch-scale-num" value="1" step="0.1"
-                                        class="input-compact mini-num">
-                                </div>
-                            </div>
-                            <div class="hatch-row-full">
-                                <label>Rotation</label>
-                                <div class="slider-with-input">
-                                    <input type="range" id="layer-buildings-hatch-rotation" min="0" max="180" step="1"
-                                        value="45" class="full-width-slider">
-                                    <input type="number" id="layer-buildings-hatch-rotation-num" value="45" step="1"
-                                        class="input-compact mini-num">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Layer: Water -->
-                    <div class="layer-compact-row">
-                        <div class="layer-name-col">
-                            <input type="checkbox" id="layer-water-visible" class="compact-check" checked>
-                            <label for="layer-water-visible">Water</label>
-                        </div>
-                        <div class="layer-stroke-col">
-                            <input type="color" id="layer-water-stroke" value="#3b82f6" class="mini-color">
-                            <input type="number" id="layer-water-width" value="1" min="0" step="0.1"
-                                class="input-compact mini-num">
-                        </div>
-                        <div class="layer-fill-col">
-                            <input type="color" id="layer-water-fill" value="#3b82f6" class="mini-color">
-                            <input type="checkbox" id="layer-water-fill-enabled" class="compact-check">
-                        </div>
-                        <div class="layer-hatch-col">
-                            <input type="checkbox" id="layer-water-hatched" class="compact-check">
-                            <button id="layer-water-hatch-trigger" class="hatch-settings-trigger"><svg width="12"
-                                    height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <circle cx="12" cy="12" r="3"></circle>
-                                    <path
-                                        d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
-                                    </path>
-                                </svg></button>
-                        </div>
-                        <div class="layer-laser-col">
-                            <select id="layer-water-laser-mode" class="input-compact mini-select" style="width:40px;">
-                                <option value="engrave" selected>Eng</option>
-                                <option value="score">Sco</option>
-                                <option value="cut">Cut</option>
-                            </select>
-                            <input type="number" id="layer-water-power" value="15" class="input-compact mini-num">
-                            <input type="number" id="layer-water-speed" value="150" class="input-compact mini-num">
-                        </div>
-                        <div id="layer-water-hatch-settings" class="layer-extended-settings">
-                            <div class="hatch-row-full">
-                                <label>Pattern Style</label>
-                                <select id="layer-water-hatch-style" class="input-compact full-width-select">
-                                    <option value="lines">Diagonal (Right)</option>
-                                    <option value="lines-left">Diagonal (Left)</option>
-                                    <option value="horizontal">Horizontal</option>
-                                    <option value="vertical">Vertical</option>
-                                    <option value="waves">Waves</option>
-                                    <option value="grid">Grid</option>
-                                    <option value="dots">Dots</option>
-                                    <option value="text">Custom Text</option>
-                                </select>
-                            </div>
-                            <div class="hatch-row-full hatch-text-row" style="display:none;"
-                                id="layer-water-hatch-text-row">
-                                <label>Hatch Text</label>
-                                <input type="text" id="layer-water-hatch-text" value="WATER"
-                                    class="input-compact full-width-input">
-                            </div>
-                            <div class="hatch-row-full compact-row-inputs">
-                                <div class="col-half">
-                                    <label>Color</label>
-                                    <input type="color" id="layer-water-hatch-color" value="#000000"
-                                        class="mini-color full-width-input">
-                                </div>
-                                <div class="col-half">
-                                    <label>Stroke</label>
-                                    <input type="number" id="layer-water-hatch-width" value="0.5" step="0.1" min="0.1"
-                                        class="input-compact full-width-input">
-                                </div>
-                            </div>
-                            <div class="hatch-row-full">
-                                <label>Scale</label>
-                                <div class="slider-with-input">
-                                    <input type="range" id="layer-water-hatch-scale" min="0.1" max="5" step="0.1"
-                                        value="1" class="full-width-slider">
-                                    <input type="number" id="layer-water-hatch-scale-num" value="1" step="0.1"
-                                        class="input-compact mini-num">
-                                </div>
-                            </div>
-                            <div class="hatch-row-full">
-                                <label>Rotation</label>
-                                <div class="slider-with-input">
-                                    <input type="range" id="layer-water-hatch-rotation" min="0" max="180" step="1"
-                                        value="45" class="full-width-slider">
-                                    <input type="number" id="layer-water-hatch-rotation-num" value="45" step="1"
-                                        class="input-compact mini-num">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Layer: Streets -->
-                    <div class="layer-compact-row">
-                        <div class="layer-name-col">
-                            <input type="checkbox" id="layer-streets-visible" class="compact-check" checked>
-                            <label for="layer-streets-visible">Street</label>
-                        </div>
-                        <div class="layer-stroke-col">
-                            <input type="color" id="layer-streets-stroke" value="#333333" class="mini-color">
-                            <input type="number" id="layer-streets-width" value="1" min="0" step="0.1"
-                                class="input-compact mini-num">
-                        </div>
-                        <div class="layer-fill-col">
-                            <!-- Streets Fill (Disabled by default typically, but consistent UI) -->
-                            <input type="color" id="layer-streets-fill" value="#ffffff" class="mini-color">
-                            <input type="checkbox" id="layer-streets-fill-enabled" class="compact-check">
-                        </div>
-                        <div class="layer-hatch-col">
-                            <input type="checkbox" id="layer-streets-labels" class="compact-check" title="Show Labels">
-                            <span style="font-size:0.6em">TXT</span>
-                        </div>
-                        <div class="layer-laser-col">
-                            <select id="layer-streets-laser-mode" class="input-compact mini-select" style="width:40px;">
-                                <option value="engrave">Eng</option>
-                                <option value="score" selected>Sco</option>
-                                <option value="cut">Cut</option>
-                            </select>
-                            <input type="number" id="layer-streets-power" value="20" class="input-compact mini-num">
-                            <input type="number" id="layer-streets-speed" value="100" class="input-compact mini-num">
-                        </div>
-                    </div>
-
-                    <!-- Layer: Parks -->
-                    <div class="layer-compact-row">
-                        <div class="layer-name-col">
-                            <input type="checkbox" id="layer-parks-visible" class="compact-check" checked>
-                            <label for="layer-parks-visible">Park</label>
-                        </div>
-                        <div class="layer-stroke-col">
-                            <input type="color" id="layer-parks-stroke" value="#22c55e" class="mini-color">
-                            <input type="number" id="layer-parks-width" value="0" min="0" step="0.1"
-                                class="input-compact mini-num">
-                        </div>
-                        <div class="layer-fill-col">
-                            <input type="color" id="layer-parks-fill" value="#22c55e" class="mini-color">
-                            <input type="checkbox" id="layer-parks-fill-enabled" class="compact-check" checked>
-                        </div>
-                        <div class="layer-hatch-col">
-                            <input type="checkbox" id="layer-parks-hatched" class="compact-check">
-                            <button id="layer-parks-hatch-trigger" class="hatch-settings-trigger"><svg width="12"
-                                    height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <circle cx="12" cy="12" r="3"></circle>
-                                    <path
-                                        d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
-                                    </path>
-                                </svg></button>
-                        </div>
-                        <div class="layer-laser-col">
-                            <select id="layer-parks-laser-mode" class="input-compact mini-select" style="width:40px;">
-                                <option value="engrave" selected>Eng</option>
-                                <option value="score">Sco</option>
-                                <option value="cut">Cut</option>
-                            </select>
-                            <input type="number" id="layer-parks-power" value="10" class="input-compact mini-num">
-                            <input type="number" id="layer-parks-speed" value="200" class="input-compact mini-num">
-                        </div>
-                        <div id="layer-parks-hatch-settings" class="layer-extended-settings">
-                            <div class="hatch-row-full">
-                                <label>Pattern Style</label>
-                                <select id="layer-parks-hatch-style" class="input-compact full-width-select">
-                                    <option value="lines">Diagonal (Right)</option>
-                                    <option value="lines-left">Diagonal (Left)</option>
-                                    <option value="horizontal">Horizontal</option>
-                                    <option value="vertical">Vertical</option>
-                                    <option value="grid">Grid (Square)</option>
-                                    <option value="crosshatch">Crosshatch</option>
-                                    <option value="dots">Dots (Small)</option>
-                                    <option value="dots-large">Dots (Large)</option>
-                                    <option value="hexagons">Hexagons</option>
-                                    <option value="bricks">Bricks</option>
-                                    <option value="waves">Waves</option>
-                                    <option value="zigzag">Zigzag</option>
-                                    <option value="dashed">Dashed Lines</option>
-                                    <option value="stars">Stars</option>
-                                    <option value="squares">Squares</option>
-                                    <option value="text">Custom Text</option>
-                                </select>
-                            </div>
-                            <div class="hatch-row-full hatch-text-row" style="display:none;"
-                                id="layer-parks-hatch-text-row">
-                                <label>Hatch Text</label>
-                                <input type="text" id="layer-parks-hatch-text" value="PARK"
-                                    class="input-compact full-width-input">
-                            </div>
-                            <div class="hatch-row-full compact-row-inputs">
-                                <div class="col-half">
-                                    <label>Color</label>
-                                    <input type="color" id="layer-parks-hatch-color" value="#000000"
-                                        class="mini-color full-width-input">
-                                </div>
-                                <div class="col-half">
-                                    <label>Stroke</label>
-                                    <input type="number" id="layer-parks-hatch-width" value="0.5" step="0.1" min="0.1"
-                                        class="input-compact full-width-input">
-                                </div>
-                            </div>
-                            <div class="hatch-row-full">
-                                <label>Scale</label>
-                                <div class="slider-with-input">
-                                    <input type="range" id="layer-parks-hatch-scale" min="0.1" max="5" step="0.1"
-                                        value="1" class="full-width-slider">
-                                    <input type="number" id="layer-parks-hatch-scale-num" value="1" step="0.1"
-                                        class="input-compact mini-num">
-                                </div>
-                            </div>
-                            <div class="hatch-row-full">
-                                <label>Rotation</label>
-                                <div class="slider-with-input">
-                                    <input type="range" id="layer-parks-hatch-rotation" min="0" max="180" step="1"
-                                        value="45" class="full-width-slider">
-                                    <input type="number" id="layer-parks-hatch-rotation-num" value="45" step="1"
-                                        class="input-compact mini-num">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Layer: Railways -->
-                    <div class="layer-compact-row">
-                        <div class="layer-name-col">
-                            <input type="checkbox" id="layer-railways-visible" class="compact-check" checked>
-                            <label for="layer-railways-visible">Rail</label>
-                        </div>
-                        <div class="layer-stroke-col">
-                            <input type="color" id="layer-railways-stroke" value="#475569" class="mini-color">
-                            <input type="number" id="layer-railways-width" value="1.5" min="0" step="0.1"
-                                class="input-compact mini-num">
-                        </div>
-                        <div class="layer-fill-col">
-                            <input type="color" id="layer-railways-fill" value="#000000" class="mini-color">
-                            <input type="checkbox" id="layer-railways-fill-enabled" class="compact-check">
-                        </div>
-                        <div class="layer-hatch-col">
-                            <!-- Hatch usually unwanted for rails lines, but requested for ALL -->
-                            <input type="checkbox" id="layer-railways-hatched" class="compact-check">
-                            <button id="layer-railways-hatch-trigger" class="hatch-settings-trigger"><svg width="12"
-                                    height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <circle cx="12" cy="12" r="3"></circle>
-                                    <path
-                                        d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
-                                    </path>
-                                </svg></button>
-                        </div>
-                        <div class="layer-laser-col">
-                            <select id="layer-railways-laser-mode" class="input-compact mini-select"
-                                style="width:40px;">
-                                <option value="score" selected>Sco</option>
-                                <option value="engrave">Eng</option>
-                            </select>
-                            <input type="number" id="layer-railways-power" value="30" class="input-compact mini-num">
-                            <input type="number" id="layer-railways-speed" value="80" class="input-compact mini-num">
-                        </div>
-                        <div id="layer-railways-hatch-settings" class="layer-extended-settings">
-                            <div class="hatch-row-full">
-                                <label>Pattern Style</label>
-                                <select id="layer-railways-hatch-style" class="input-compact full-width-select">
-                                    <option value="lines">Diagonal (Right)</option>
-                                    <option value="crosshatch">Crosshatch</option>
-                                    <option value="dashed">Dashed Lines</option>
-                                </select>
-                            </div>
-                            <div class="hatch-row-full compact-row-inputs">
-                                <div class="col-half">
-                                    <label>Color</label>
-                                    <input type="color" id="layer-railways-hatch-color" value="#000000"
-                                        class="mini-color full-width-input">
-                                </div>
-                                <div class="col-half">
-                                    <label>Stroke</label>
-                                    <input type="number" id="layer-railways-hatch-width" value="0.5" step="0.1"
-                                        min="0.1" class="input-compact full-width-input">
-                                </div>
-                            </div>
-                            <div class="hatch-row-full">
-                                <label>Scale</label>
-                                <div class="slider-with-input">
-                                    <input type="range" id="layer-railways-hatch-scale" min="0.1" max="5" step="0.1"
-                                        value="1" class="full-width-slider">
-                                    <input type="number" id="layer-railways-hatch-scale-num" value="1" step="0.1"
-                                        class="input-compact mini-num">
-                                </div>
-                            </div>
-                            <div class="hatch-row-full">
-                                <label>Rotation</label>
-                                <div class="slider-with-input">
-                                    <input type="range" id="layer-railways-hatch-rotation" min="0" max="180" step="1"
-                                        value="45" class="full-width-slider">
-                                    <input type="number" id="layer-railways-hatch-rotation-num" value="45" step="1"
-                                        class="input-compact mini-num">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Layer: Industrial -->
-                    <div class="layer-compact-row">
-                        <div class="layer-name-col">
-                            <input type="checkbox" id="layer-industrial-visible" class="compact-check">
-                            <label for="layer-industrial-visible">Indus</label>
-                        </div>
-                        <div class="layer-stroke-col">
-                            <input type="color" id="layer-industrial-stroke" value="#94a3b8" class="mini-color">
-                            <input type="number" id="layer-industrial-width" value="0.5" min="0" step="0.1"
-                                class="input-compact mini-num">
-                        </div>
-                        <div class="layer-fill-col">
-                            <input type="color" id="layer-industrial-fill" value="#cbd5e1" class="mini-color">
-                            <input type="checkbox" id="layer-industrial-fill-enabled" class="compact-check">
-                        </div>
-                        <div class="layer-hatch-col">
-                            <input type="checkbox" id="layer-industrial-hatched" class="compact-check">
-                            <button id="layer-industrial-hatch-trigger" class="hatch-settings-trigger"><svg width="12"
-                                    height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <circle cx="12" cy="12" r="3"></circle>
-                                    <path
-                                        d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
-                                    </path>
-                                </svg></button>
-                        </div>
-                        <div class="layer-laser-col">
-                            <select id="layer-industrial-laser-mode" class="input-compact mini-select"
-                                style="width:40px;">
-                                <option value="engrave" selected>Eng</option>
-                                <option value="score">Sco</option>
-                            </select>
-                            <input type="number" id="layer-industrial-power" value="10" class="input-compact mini-num">
-                            <input type="number" id="layer-industrial-speed" value="200" class="input-compact mini-num">
-                        </div>
-                        <div id="layer-industrial-hatch-settings" class="layer-extended-settings">
-                            <div class="hatch-row-full">
-                                <label>Pattern Style</label>
-                                <select id="layer-industrial-hatch-style" class="input-compact full-width-select">
-                                    <option value="lines">Diagonal (Right)</option>
-                                    <option value="lines-left">Diagonal (Left)</option>
-                                    <option value="horizontal">Horizontal</option>
-                                    <option value="vertical">Vertical</option>
-                                    <option value="grid">Grid (Square)</option>
-                                    <option value="crosshatch">Crosshatch</option>
-                                    <option value="dots">Dots (Small)</option>
-                                    <option value="dots-large">Dots (Large)</option>
-                                    <option value="hexagons">Hexagons</option>
-                                    <option value="bricks">Bricks</option>
-                                    <option value="waves">Waves</option>
-                                    <option value="zigzag">Zigzag</option>
-                                    <option value="dashed">Dashed Lines</option>
-                                    <option value="stars">Stars</option>
-                                    <option value="squares">Squares</option>
-                                    <option value="text">Custom Text</option>
-                                </select>
-                            </div>
-                            <div class="hatch-row-full hatch-text-row" style="display:none;"
-                                id="layer-industrial-hatch-text-row">
-                                <label>Hatch Text</label>
-                                <input type="text" id="layer-industrial-hatch-text" value="IND"
-                                    class="input-compact full-width-input">
-                            </div>
-                            <div class="hatch-row-full compact-row-inputs">
-                                <div class="col-half">
-                                    <label>Color</label>
-                                    <input type="color" id="layer-industrial-hatch-color" value="#000000"
-                                        class="mini-color full-width-input">
-                                </div>
-                                <div class="col-half">
-                                    <label>Stroke</label>
-                                    <input type="number" id="layer-industrial-hatch-width" value="0.5" step="0.1"
-                                        min="0.1" class="input-compact full-width-input">
-                                </div>
-                            </div>
-                            <div class="hatch-row-full">
-                                <label>Scale</label>
-                                <div class="slider-with-input">
-                                    <input type="range" id="layer-industrial-hatch-scale" min="0.1" max="5" step="0.1"
-                                        value="1" class="full-width-slider">
-                                    <input type="number" id="layer-industrial-hatch-scale-num" value="1" step="0.1"
-                                        class="input-compact mini-num">
-                                </div>
-                            </div>
-                            <div class="hatch-row-full">
-                                <label>Rotation</label>
-                                <div class="slider-with-input">
-                                    <input type="range" id="layer-industrial-hatch-rotation" min="0" max="180" step="1"
-                                        value="45" class="full-width-slider">
-                                    <input type="number" id="layer-industrial-hatch-rotation-num" value="45" step="1"
-                                        class="input-compact mini-num">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Layer: Parking -->
-                    <div class="layer-compact-row">
-                        <div class="layer-name-col">
-                            <input type="checkbox" id="layer-parking-visible" class="compact-check">
-                            <label for="layer-parking-visible">ParkP</label>
-                        </div>
-                        <div class="layer-stroke-col">
-                            <input type="color" id="layer-parking-stroke" value="#94a3b8" class="mini-color">
-                            <input type="number" id="layer-parking-width" value="0.5" min="0" step="0.1"
-                                class="input-compact mini-num">
-                        </div>
-                        <div class="layer-fill-col">
-                            <input type="color" id="layer-parking-fill" value="#e2e8f0" class="mini-color">
-                            <input type="checkbox" id="layer-parking-fill-enabled" class="compact-check" checked>
-                        </div>
-                        <div class="layer-hatch-col">
-                            <input type="checkbox" id="layer-parking-hatched" class="compact-check">
-                            <button id="layer-parking-hatch-trigger" class="hatch-settings-trigger"><svg width="12"
-                                    height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <circle cx="12" cy="12" r="3"></circle>
-                                    <path
-                                        d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
-                                    </path>
-                                </svg></button>
-                        </div>
-                        <div class="layer-laser-col">
-                            <select id="layer-parking-laser-mode" class="input-compact mini-select" style="width:40px;">
-                                <option value="engrave" selected>Eng</option>
-                                <option value="score">Sco</option>
-                            </select>
-                            <input type="number" id="layer-parking-power" value="10" class="input-compact mini-num">
-                            <input type="number" id="layer-parking-speed" value="200" class="input-compact mini-num">
-                        </div>
-                        <div id="layer-parking-hatch-settings" class="layer-extended-settings">
-                            <div class="hatch-row-full">
-                                <label>Pattern Style</label>
-                                <select id="layer-parking-hatch-style" class="input-compact full-width-select">
-                                    <option value="lines">Diagonal (Right)</option>
-                                    <option value="lines-left">Diagonal (Left)</option>
-                                    <option value="horizontal">Horizontal</option>
-                                    <option value="vertical">Vertical</option>
-                                    <option value="grid">Grid (Square)</option>
-                                    <option value="crosshatch">Crosshatch</option>
-                                    <option value="dots">Dots (Small)</option>
-                                    <option value="dots-large">Dots (Large)</option>
-                                    <option value="hexagons">Hexagons</option>
-                                    <option value="bricks">Bricks</option>
-                                    <option value="waves">Waves</option>
-                                    <option value="zigzag">Zigzag</option>
-                                    <option value="dashed">Dashed Lines</option>
-                                    <option value="stars">Stars</option>
-                                    <option value="squares">Squares</option>
-                                    <option value="text">Custom Text</option>
-                                </select>
-                            </div>
-                            <div class="hatch-row-full hatch-text-row" style="display:none;"
-                                id="layer-parking-hatch-text-row">
-                                <label>Hatch Text</label>
-                                <input type="text" id="layer-parking-hatch-text" value="P"
-                                    class="input-compact full-width-input">
-                            </div>
-                            <div class="hatch-row-full compact-row-inputs">
-                                <div class="col-half">
-                                    <label>Color</label>
-                                    <input type="color" id="layer-parking-hatch-color" value="#000000"
-                                        class="mini-color full-width-input">
-                                </div>
-                                <div class="col-half">
-                                    <label>Stroke</label>
-                                    <input type="number" id="layer-parking-hatch-width" value="0.5" step="0.1" min="0.1"
-                                        class="input-compact full-width-input">
-                                </div>
-                            </div>
-                            <div class="hatch-row-full">
-                                <label>Scale</label>
-                                <div class="slider-with-input">
-                                    <input type="range" id="layer-parking-hatch-scale" min="0.1" max="5" step="0.1"
-                                        value="1" class="full-width-slider">
-                                    <input type="number" id="layer-parking-hatch-scale-num" value="1" step="0.1"
-                                        class="input-compact mini-num">
-                                </div>
-                            </div>
-                            <div class="hatch-row-full">
-                                <label>Rotation</label>
-                                <div class="slider-with-input">
-                                    <input type="range" id="layer-parking-hatch-rotation" min="0" max="180" step="1"
-                                        value="45" class="full-width-slider">
-                                    <input type="number" id="layer-parking-hatch-rotation-num" value="45" step="1"
-                                        class="input-compact mini-num">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="tip-text">
-                    <small>Turn on Vector Mode to fetch editable paths from Overpass API. This may take a few
-                        seconds.</small>
-                </div>
-            </div>
-
-            <div class="section size-section">
-                <h2>Dimensions & Shape</h2>
-                <div class="grid-2">
-                    <div class="input-group">
-                        <label>W (mm)</label>
-                        <input type="number" id="map-width" value="200" min="50" max="1000">
-                    </div>
-                    <div class="input-group">
-                        <label>H (mm)</label>
-                        <input type="number" id="map-height" value="200" min="50" max="1000">
-                    </div>
-                </div>
-                <div class="input-group">
-                    <label>Corner Radius (mm)</label>
-                    <input type="range" id="map-radius" value="0" min="0" max="100">
-                </div>
-                <div class="input-group">
-                    <label>Paper Color</label>
-                    <div class="row-inputs">
-                        <input type="color" id="map-bg-color" value="#ffffff">
-                        <span style="font-size: 0.8rem; color: var(--text-muted);">Background</span>
-                    </div>
-                </div>
-                <div class="presets">
-                    <button class="chip" data-w="210" data-h="297">A4</button>
-                    <button class="chip" data-w="297" data-h="420">A3</button>
-                    <button class="chip" data-w="200" data-h="200">Square</button>
-                </div>
-            </div>
-
-            <div class="section label-config-section">
-                <h2>Label Styling</h2>
-                <div class="grid-2">
-                    <div class="input-group">
-                        <label>Font</label>
-                        <select id="font-select">
-                            <option value="'Outfit', sans-serif">Sans Serif</option>
-                            <option value="'Playfair Display', serif">Serif</option>
-                            <option value="'Source Code Pro', monospace">Mono</option>
-                        </select>
-                    </div>
-                    <div class="input-group">
-                        <label>Size</label>
-                        <input type="number" id="font-size" value="14" min="8" max="40">
-                    </div>
-                </div>
-                <div class="row-center">
-                    <input type="checkbox" id="bubble-check"> <label for="bubble-check" class="inline">Show Bubble
-                        Background</label>
-                </div>
-            </div>
-
-            <div class="section marker-section">
-                <h2>Pins & Labels</h2>
-                <div class="input-group">
+                <div class="section search-section">
+                    <label for="address-input">Location</label>
                     <div class="search-box">
-                        <input type="text" id="marker-text" placeholder="Label text...">
-                        <button id="add-marker-btn" title="Add Pin">
+                        <input type="text" id="address-input" placeholder="Enter city, address...">
+                        <button id="search-btn">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                 stroke-width="2">
-                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                                <circle cx="12" cy="10" r="3"></circle>
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                             </svg>
                         </button>
                     </div>
                 </div>
-                <div id="marker-list" class="marker-list">
-                    <!-- Individual markers will be injected here -->
-                </div>
-                <div class="tip-text">
-                    <small>Pin will appear at center. Drag it to position.</small>
-                </div>
-            </div>
 
-            <div class="section export-section">
-                <button id="export-jpg-btn" class="btn primary">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                        style="margin-right:8px; vertical-align:middle">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                        <polyline points="7 10 12 15 17 10"></polyline>
-                        <line x1="12" y1="15" x2="12" y2="3"></line>
-                    </svg>
-                    Export JPG
-                </button>
+                <div class="section style-section">
+                    <h2>Map Style</h2>
+                    <div id="map-style-grid" class="style-grid">
+                        <button class="style-btn active" data-val="standard">Midnight</button>
+                        <button class="style-btn" data-val="light">Arctic</button>
+                        <button class="style-btn" data-val="satellite">Satellite</button>
+                        <button class="style-btn" data-val="night">Voyager</button>
+                    </div>
+                </div>
+
+                <div class="section theme-section">
+                    <h2>Graphic Themes</h2>
+                    <div class="presets themes">
+                        <button class="chip theme-btn" data-theme="industrial">Industrial</button>
+                        <button class="chip theme-btn" data-theme="blueprint">Blueprint</button>
+                        <button class="chip theme-btn" data-theme="nature">Nature</button>
+                        <button class="chip theme-btn" data-theme="gold">Gold-Black</button>
+                        <button class="chip theme-btn" data-theme="retro">Retro</button>
+                        <button class="chip theme-btn" data-theme="cyberpunk">Cyber</button>
+                        <button class="chip theme-btn" data-theme="minimal">Minimal</button>
+                        <button class="chip theme-btn" data-theme="technical">Tech</button>
+                        <button class="chip theme-btn" data-theme="forest">Forest</button>
+                        <button class="chip theme-btn" data-theme="sketch">Sketch</button>
+                        <button class="chip theme-btn" data-theme="matrix">Matrix</button>
+                        <button class="chip theme-btn" data-theme="arctic">Arctic</button>
+                        <button class="chip theme-btn" data-theme="magma">Magma</button>
+                        <button class="chip theme-btn" data-theme="blueprint_alt">Blue-Engrave</button>
+                        <button class="chip theme-btn" data-theme="neon_pink">Neon</button>
+                        <button class="chip theme-btn" data-theme="chalkboard">Chalk</button>
+                        <button class="chip theme-btn" data-theme="vintage_gold">Old Gold</button>
+                        <button class="chip theme-btn" data-theme="deep_sea">Deep Sea</button>
+                        <button class="chip theme-btn" data-theme="sunset">Sunset</button>
+                    </div>
+                </div>
+
+                <div class="section layers-section">
+                    <h2>Vector Layers (BETA)</h2>
+                    <div class="row-center" style="margin-bottom: 10px; gap: 15px; flex-wrap: wrap;">
+                        <div class="mode-item">
+                            <label class="switch">
+                                <input type="checkbox" id="vector-mode-toggle">
+                                <span class="slider round"></span>
+                            </label>
+                            <span style="font-weight: 500; margin-left: 8px;">Vector</span>
+                        </div>
+                        <div class="mode-item">
+                            <label class="switch">
+                                <input type="checkbox" id="black-mode-toggle">
+                                <span class="slider round"></span>
+                            </label>
+                            <span style="font-weight: 500; margin-left: 8px;">Black</span>
+                        </div>
+                        <div class="mode-item">
+                            <label class="switch">
+                                <input type="checkbox" id="grayscale-mode-toggle">
+                                <span class="slider round"></span>
+                            </label>
+                            <span style="font-weight: 500; margin-left: 8px;">Grayscale</span>
+                        </div>
+                    </div>
+
+                    <div id="layer-toggles" class="layer-list disabled">
+                        <!-- Grid Headers -->
+                        <div class="layer-headers">
+                            <div class="col-header left">Layer</div>
+                            <div class="col-header">Stroke</div>
+                            <div class="col-header">Fill</div>
+                            <div class="col-header">Hatch</div>
+                            <div class="col-header">Laser (M/P/S)</div>
+                        </div>
+
+                        <!-- Layer: Buildings -->
+                        <div class="layer-compact-row">
+                            <div class="layer-name-col">
+                                <input type="checkbox" id="layer-buildings-visible" class="compact-check" checked>
+                                <label for="layer-buildings-visible" title="Buildings">Build</label>
+                            </div>
+                            <div class="layer-stroke-col">
+                                <input type="color" id="layer-buildings-stroke" value="#64748b" class="mini-color"
+                                    title="Stroke Color">
+                                <input type="number" id="layer-buildings-width" value="1" min="0" step="0.1"
+                                    class="input-compact mini-num" title="Stroke Width">
+                            </div>
+                            <div class="layer-fill-col">
+                                <input type="color" id="layer-buildings-fill" value="#64748b" class="mini-color"
+                                    title="Fill Color">
+                                <input type="checkbox" id="layer-buildings-fill-enabled" class="compact-check" checked
+                                    title="Enable Fill">
+                            </div>
+                            <div class="layer-hatch-col">
+                                <input type="checkbox" id="layer-buildings-hatched" class="compact-check"
+                                    title="Use Pattern">
+                                <button id="layer-buildings-hatch-trigger" class="hatch-settings-trigger"
+                                    title="Settings">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2">
+                                        <circle cx="12" cy="12" r="3"></circle>
+                                        <path
+                                            d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+                                        </path>
+                                    </svg>
+                                </button>
+                            </div>
+                            <div class="layer-laser-col">
+                                <select id="layer-buildings-laser-mode" class="input-compact mini-select"
+                                    style="width:40px;">
+                                    <option value="engrave" selected>Eng</option>
+                                    <option value="score">Sco</option>
+                                    <option value="cut">Cut</option>
+                                </select>
+                                <input type="number" id="layer-buildings-power" value="10"
+                                    class="input-compact mini-num" title="Power">
+                                <input type="number" id="layer-buildings-speed" value="200"
+                                    class="input-compact mini-num" title="Speed">
+                            </div>
+
+                            <div id="layer-buildings-hatch-settings" class="layer-extended-settings">
+                                <div class="hatch-row-full">
+                                    <label>Pattern Style</label>
+                                    <select id="layer-buildings-hatch-style" class="input-compact full-width-select">
+                                        <option value="lines">Diagonal (Right)</option>
+                                        <option value="lines-left">Diagonal (Left)</option>
+                                        <option value="horizontal">Horizontal</option>
+                                        <option value="vertical">Vertical</option>
+                                        <option value="grid">Grid (Square)</option>
+                                        <option value="crosshatch">Crosshatch</option>
+                                        <option value="dots">Dots (Small)</option>
+                                        <option value="dots-large">Dots (Large)</option>
+                                        <option value="hexagons">Hexagons</option>
+                                        <option value="bricks">Bricks</option>
+                                        <option value="waves">Waves</option>
+                                        <option value="zigzag">Zigzag</option>
+                                        <option value="dashed">Dashed Lines</option>
+                                        <option value="stars">Stars</option>
+                                        <option value="squares">Squares</option>
+                                        <option value="text">Custom Text</option>
+                                    </select>
+                                </div>
+                                <div class="hatch-row-full hatch-text-row" style="display:none;"
+                                    id="layer-buildings-hatch-text-row">
+                                    <label>Hatch Text</label>
+                                    <input type="text" id="layer-buildings-hatch-text" value="MAP"
+                                        class="input-compact full-width-input">
+                                </div>
+                                <div class="hatch-row-full compact-row-inputs">
+                                    <div class="col-half">
+                                        <label>Color</label>
+                                        <input type="color" id="layer-buildings-hatch-color" value="#000000"
+                                            class="mini-color full-width-input">
+                                    </div>
+                                    <div class="col-half">
+                                        <label>Stroke</label>
+                                        <input type="number" id="layer-buildings-hatch-width" value="1" step="0.1"
+                                            min="0.1" class="input-compact full-width-input">
+                                    </div>
+                                </div>
+                                <div class="hatch-row-full">
+                                    <label>Scale</label>
+                                    <div class="slider-with-input">
+                                        <input type="range" id="layer-buildings-hatch-scale" min="0.1" max="5"
+                                            step="0.1" value="1" class="full-width-slider">
+                                        <input type="number" id="layer-buildings-hatch-scale-num" value="1" step="0.1"
+                                            class="input-compact mini-num">
+                                    </div>
+                                </div>
+                                <div class="hatch-row-full">
+                                    <label>Rotation</label>
+                                    <div class="slider-with-input">
+                                        <input type="range" id="layer-buildings-hatch-rotation" min="0" max="180"
+                                            step="1" value="45" class="full-width-slider">
+                                        <input type="number" id="layer-buildings-hatch-rotation-num" value="45" step="1"
+                                            class="input-compact mini-num">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Layer: Water -->
+                        <div class="layer-compact-row">
+                            <div class="layer-name-col">
+                                <input type="checkbox" id="layer-water-visible" class="compact-check" checked>
+                                <label for="layer-water-visible">Water</label>
+                            </div>
+                            <div class="layer-stroke-col">
+                                <input type="color" id="layer-water-stroke" value="#3b82f6" class="mini-color">
+                                <input type="number" id="layer-water-width" value="1" min="0" step="0.1"
+                                    class="input-compact mini-num">
+                            </div>
+                            <div class="layer-fill-col">
+                                <input type="color" id="layer-water-fill" value="#3b82f6" class="mini-color">
+                                <input type="checkbox" id="layer-water-fill-enabled" class="compact-check">
+                            </div>
+                            <div class="layer-hatch-col">
+                                <input type="checkbox" id="layer-water-hatched" class="compact-check">
+                                <button id="layer-water-hatch-trigger" class="hatch-settings-trigger"><svg width="12"
+                                        height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2">
+                                        <circle cx="12" cy="12" r="3"></circle>
+                                        <path
+                                            d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+                                        </path>
+                                    </svg></button>
+                            </div>
+                            <div class="layer-laser-col">
+                                <select id="layer-water-laser-mode" class="input-compact mini-select"
+                                    style="width:40px;">
+                                    <option value="engrave" selected>Eng</option>
+                                    <option value="score">Sco</option>
+                                    <option value="cut">Cut</option>
+                                </select>
+                                <input type="number" id="layer-water-power" value="15" class="input-compact mini-num">
+                                <input type="number" id="layer-water-speed" value="150" class="input-compact mini-num">
+                            </div>
+                            <div id="layer-water-hatch-settings" class="layer-extended-settings">
+                                <div class="hatch-row-full">
+                                    <label>Pattern Style</label>
+                                    <select id="layer-water-hatch-style" class="input-compact full-width-select">
+                                        <option value="lines">Diagonal (Right)</option>
+                                        <option value="lines-left">Diagonal (Left)</option>
+                                        <option value="horizontal">Horizontal</option>
+                                        <option value="vertical">Vertical</option>
+                                        <option value="waves">Waves</option>
+                                        <option value="grid">Grid</option>
+                                        <option value="dots">Dots</option>
+                                        <option value="text">Custom Text</option>
+                                    </select>
+                                </div>
+                                <div class="hatch-row-full hatch-text-row" style="display:none;"
+                                    id="layer-water-hatch-text-row">
+                                    <label>Hatch Text</label>
+                                    <input type="text" id="layer-water-hatch-text" value="WATER"
+                                        class="input-compact full-width-input">
+                                </div>
+                                <div class="hatch-row-full compact-row-inputs">
+                                    <div class="col-half">
+                                        <label>Color</label>
+                                        <input type="color" id="layer-water-hatch-color" value="#000000"
+                                            class="mini-color full-width-input">
+                                    </div>
+                                    <div class="col-half">
+                                        <label>Stroke</label>
+                                        <input type="number" id="layer-water-hatch-width" value="0.5" step="0.1"
+                                            min="0.1" class="input-compact full-width-input">
+                                    </div>
+                                </div>
+                                <div class="hatch-row-full">
+                                    <label>Scale</label>
+                                    <div class="slider-with-input">
+                                        <input type="range" id="layer-water-hatch-scale" min="0.1" max="5" step="0.1"
+                                            value="1" class="full-width-slider">
+                                        <input type="number" id="layer-water-hatch-scale-num" value="1" step="0.1"
+                                            class="input-compact mini-num">
+                                    </div>
+                                </div>
+                                <div class="hatch-row-full">
+                                    <label>Rotation</label>
+                                    <div class="slider-with-input">
+                                        <input type="range" id="layer-water-hatch-rotation" min="0" max="180" step="1"
+                                            value="45" class="full-width-slider">
+                                        <input type="number" id="layer-water-hatch-rotation-num" value="45" step="1"
+                                            class="input-compact mini-num">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Layer: Streets -->
+                        <div class="layer-compact-row">
+                            <div class="layer-name-col">
+                                <input type="checkbox" id="layer-streets-visible" class="compact-check" checked>
+                                <label for="layer-streets-visible">Street</label>
+                            </div>
+                            <div class="layer-stroke-col">
+                                <input type="color" id="layer-streets-stroke" value="#333333" class="mini-color">
+                                <input type="number" id="layer-streets-width" value="1" min="0" step="0.1"
+                                    class="input-compact mini-num">
+                            </div>
+                            <div class="layer-fill-col">
+                                <!-- Streets Fill (Disabled by default typically, but consistent UI) -->
+                                <input type="color" id="layer-streets-fill" value="#ffffff" class="mini-color">
+                                <input type="checkbox" id="layer-streets-fill-enabled" class="compact-check">
+                            </div>
+                            <div class="layer-hatch-col">
+                                <input type="checkbox" id="layer-streets-labels" class="compact-check"
+                                    title="Show Labels">
+                                <span style="font-size:0.6em">TXT</span>
+                            </div>
+                            <div class="layer-laser-col">
+                                <select id="layer-streets-laser-mode" class="input-compact mini-select"
+                                    style="width:40px;">
+                                    <option value="engrave">Eng</option>
+                                    <option value="score" selected>Sco</option>
+                                    <option value="cut">Cut</option>
+                                </select>
+                                <input type="number" id="layer-streets-power" value="20" class="input-compact mini-num">
+                                <input type="number" id="layer-streets-speed" value="100"
+                                    class="input-compact mini-num">
+                            </div>
+                        </div>
+
+                        <!-- Layer: Parks -->
+                        <div class="layer-compact-row">
+                            <div class="layer-name-col">
+                                <input type="checkbox" id="layer-parks-visible" class="compact-check" checked>
+                                <label for="layer-parks-visible">Park</label>
+                            </div>
+                            <div class="layer-stroke-col">
+                                <input type="color" id="layer-parks-stroke" value="#22c55e" class="mini-color">
+                                <input type="number" id="layer-parks-width" value="0" min="0" step="0.1"
+                                    class="input-compact mini-num">
+                            </div>
+                            <div class="layer-fill-col">
+                                <input type="color" id="layer-parks-fill" value="#22c55e" class="mini-color">
+                                <input type="checkbox" id="layer-parks-fill-enabled" class="compact-check" checked>
+                            </div>
+                            <div class="layer-hatch-col">
+                                <input type="checkbox" id="layer-parks-hatched" class="compact-check">
+                                <button id="layer-parks-hatch-trigger" class="hatch-settings-trigger"><svg width="12"
+                                        height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2">
+                                        <circle cx="12" cy="12" r="3"></circle>
+                                        <path
+                                            d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+                                        </path>
+                                    </svg></button>
+                            </div>
+                            <div class="layer-laser-col">
+                                <select id="layer-parks-laser-mode" class="input-compact mini-select"
+                                    style="width:40px;">
+                                    <option value="engrave" selected>Eng</option>
+                                    <option value="score">Sco</option>
+                                    <option value="cut">Cut</option>
+                                </select>
+                                <input type="number" id="layer-parks-power" value="10" class="input-compact mini-num">
+                                <input type="number" id="layer-parks-speed" value="200" class="input-compact mini-num">
+                            </div>
+                            <div id="layer-parks-hatch-settings" class="layer-extended-settings">
+                                <div class="hatch-row-full">
+                                    <label>Pattern Style</label>
+                                    <select id="layer-parks-hatch-style" class="input-compact full-width-select">
+                                        <option value="lines">Diagonal (Right)</option>
+                                        <option value="lines-left">Diagonal (Left)</option>
+                                        <option value="horizontal">Horizontal</option>
+                                        <option value="vertical">Vertical</option>
+                                        <option value="grid">Grid (Square)</option>
+                                        <option value="crosshatch">Crosshatch</option>
+                                        <option value="dots">Dots (Small)</option>
+                                        <option value="dots-large">Dots (Large)</option>
+                                        <option value="hexagons">Hexagons</option>
+                                        <option value="bricks">Bricks</option>
+                                        <option value="waves">Waves</option>
+                                        <option value="zigzag">Zigzag</option>
+                                        <option value="dashed">Dashed Lines</option>
+                                        <option value="stars">Stars</option>
+                                        <option value="squares">Squares</option>
+                                        <option value="text">Custom Text</option>
+                                    </select>
+                                </div>
+                                <div class="hatch-row-full hatch-text-row" style="display:none;"
+                                    id="layer-parks-hatch-text-row">
+                                    <label>Hatch Text</label>
+                                    <input type="text" id="layer-parks-hatch-text" value="PARK"
+                                        class="input-compact full-width-input">
+                                </div>
+                                <div class="hatch-row-full compact-row-inputs">
+                                    <div class="col-half">
+                                        <label>Color</label>
+                                        <input type="color" id="layer-parks-hatch-color" value="#000000"
+                                            class="mini-color full-width-input">
+                                    </div>
+                                    <div class="col-half">
+                                        <label>Stroke</label>
+                                        <input type="number" id="layer-parks-hatch-width" value="0.5" step="0.1"
+                                            min="0.1" class="input-compact full-width-input">
+                                    </div>
+                                </div>
+                                <div class="hatch-row-full">
+                                    <label>Scale</label>
+                                    <div class="slider-with-input">
+                                        <input type="range" id="layer-parks-hatch-scale" min="0.1" max="5" step="0.1"
+                                            value="1" class="full-width-slider">
+                                        <input type="number" id="layer-parks-hatch-scale-num" value="1" step="0.1"
+                                            class="input-compact mini-num">
+                                    </div>
+                                </div>
+                                <div class="hatch-row-full">
+                                    <label>Rotation</label>
+                                    <div class="slider-with-input">
+                                        <input type="range" id="layer-parks-hatch-rotation" min="0" max="180" step="1"
+                                            value="45" class="full-width-slider">
+                                        <input type="number" id="layer-parks-hatch-rotation-num" value="45" step="1"
+                                            class="input-compact mini-num">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Layer: Railways -->
+                        <div class="layer-compact-row">
+                            <div class="layer-name-col">
+                                <input type="checkbox" id="layer-railways-visible" class="compact-check" checked>
+                                <label for="layer-railways-visible">Rail</label>
+                            </div>
+                            <div class="layer-stroke-col">
+                                <input type="color" id="layer-railways-stroke" value="#475569" class="mini-color">
+                                <input type="number" id="layer-railways-width" value="1.5" min="0" step="0.1"
+                                    class="input-compact mini-num">
+                            </div>
+                            <div class="layer-fill-col">
+                                <input type="color" id="layer-railways-fill" value="#000000" class="mini-color">
+                                <input type="checkbox" id="layer-railways-fill-enabled" class="compact-check">
+                            </div>
+                            <div class="layer-hatch-col">
+                                <!-- Hatch usually unwanted for rails lines, but requested for ALL -->
+                                <input type="checkbox" id="layer-railways-hatched" class="compact-check">
+                                <button id="layer-railways-hatch-trigger" class="hatch-settings-trigger"><svg width="12"
+                                        height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2">
+                                        <circle cx="12" cy="12" r="3"></circle>
+                                        <path
+                                            d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+                                        </path>
+                                    </svg></button>
+                            </div>
+                            <div class="layer-laser-col">
+                                <select id="layer-railways-laser-mode" class="input-compact mini-select"
+                                    style="width:40px;">
+                                    <option value="score" selected>Sco</option>
+                                    <option value="engrave">Eng</option>
+                                </select>
+                                <input type="number" id="layer-railways-power" value="30"
+                                    class="input-compact mini-num">
+                                <input type="number" id="layer-railways-speed" value="80"
+                                    class="input-compact mini-num">
+                            </div>
+                            <div id="layer-railways-hatch-settings" class="layer-extended-settings">
+                                <div class="hatch-row-full">
+                                    <label>Pattern Style</label>
+                                    <select id="layer-railways-hatch-style" class="input-compact full-width-select">
+                                        <option value="lines">Diagonal (Right)</option>
+                                        <option value="crosshatch">Crosshatch</option>
+                                        <option value="dashed">Dashed Lines</option>
+                                    </select>
+                                </div>
+                                <div class="hatch-row-full compact-row-inputs">
+                                    <div class="col-half">
+                                        <label>Color</label>
+                                        <input type="color" id="layer-railways-hatch-color" value="#000000"
+                                            class="mini-color full-width-input">
+                                    </div>
+                                    <div class="col-half">
+                                        <label>Stroke</label>
+                                        <input type="number" id="layer-railways-hatch-width" value="0.5" step="0.1"
+                                            min="0.1" class="input-compact full-width-input">
+                                    </div>
+                                </div>
+                                <div class="hatch-row-full">
+                                    <label>Scale</label>
+                                    <div class="slider-with-input">
+                                        <input type="range" id="layer-railways-hatch-scale" min="0.1" max="5" step="0.1"
+                                            value="1" class="full-width-slider">
+                                        <input type="number" id="layer-railways-hatch-scale-num" value="1" step="0.1"
+                                            class="input-compact mini-num">
+                                    </div>
+                                </div>
+                                <div class="hatch-row-full">
+                                    <label>Rotation</label>
+                                    <div class="slider-with-input">
+                                        <input type="range" id="layer-railways-hatch-rotation" min="0" max="180"
+                                            step="1" value="45" class="full-width-slider">
+                                        <input type="number" id="layer-railways-hatch-rotation-num" value="45" step="1"
+                                            class="input-compact mini-num">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Layer: Industrial -->
+                        <div class="layer-compact-row">
+                            <div class="layer-name-col">
+                                <input type="checkbox" id="layer-industrial-visible" class="compact-check">
+                                <label for="layer-industrial-visible">Indus</label>
+                            </div>
+                            <div class="layer-stroke-col">
+                                <input type="color" id="layer-industrial-stroke" value="#94a3b8" class="mini-color">
+                                <input type="number" id="layer-industrial-width" value="0.5" min="0" step="0.1"
+                                    class="input-compact mini-num">
+                            </div>
+                            <div class="layer-fill-col">
+                                <input type="color" id="layer-industrial-fill" value="#cbd5e1" class="mini-color">
+                                <input type="checkbox" id="layer-industrial-fill-enabled" class="compact-check">
+                            </div>
+                            <div class="layer-hatch-col">
+                                <input type="checkbox" id="layer-industrial-hatched" class="compact-check">
+                                <button id="layer-industrial-hatch-trigger" class="hatch-settings-trigger"><svg
+                                        width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2">
+                                        <circle cx="12" cy="12" r="3"></circle>
+                                        <path
+                                            d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+                                        </path>
+                                    </svg></button>
+                            </div>
+                            <div class="layer-laser-col">
+                                <select id="layer-industrial-laser-mode" class="input-compact mini-select"
+                                    style="width:40px;">
+                                    <option value="engrave" selected>Eng</option>
+                                    <option value="score">Sco</option>
+                                </select>
+                                <input type="number" id="layer-industrial-power" value="10"
+                                    class="input-compact mini-num">
+                                <input type="number" id="layer-industrial-speed" value="200"
+                                    class="input-compact mini-num">
+                            </div>
+                            <div id="layer-industrial-hatch-settings" class="layer-extended-settings">
+                                <div class="hatch-row-full">
+                                    <label>Pattern Style</label>
+                                    <select id="layer-industrial-hatch-style" class="input-compact full-width-select">
+                                        <option value="lines">Diagonal (Right)</option>
+                                        <option value="lines-left">Diagonal (Left)</option>
+                                        <option value="horizontal">Horizontal</option>
+                                        <option value="vertical">Vertical</option>
+                                        <option value="grid">Grid (Square)</option>
+                                        <option value="crosshatch">Crosshatch</option>
+                                        <option value="dots">Dots (Small)</option>
+                                        <option value="dots-large">Dots (Large)</option>
+                                        <option value="hexagons">Hexagons</option>
+                                        <option value="bricks">Bricks</option>
+                                        <option value="waves">Waves</option>
+                                        <option value="zigzag">Zigzag</option>
+                                        <option value="dashed">Dashed Lines</option>
+                                        <option value="stars">Stars</option>
+                                        <option value="squares">Squares</option>
+                                        <option value="text">Custom Text</option>
+                                    </select>
+                                </div>
+                                <div class="hatch-row-full hatch-text-row" style="display:none;"
+                                    id="layer-industrial-hatch-text-row">
+                                    <label>Hatch Text</label>
+                                    <input type="text" id="layer-industrial-hatch-text" value="IND"
+                                        class="input-compact full-width-input">
+                                </div>
+                                <div class="hatch-row-full compact-row-inputs">
+                                    <div class="col-half">
+                                        <label>Color</label>
+                                        <input type="color" id="layer-industrial-hatch-color" value="#000000"
+                                            class="mini-color full-width-input">
+                                    </div>
+                                    <div class="col-half">
+                                        <label>Stroke</label>
+                                        <input type="number" id="layer-industrial-hatch-width" value="0.5" step="0.1"
+                                            min="0.1" class="input-compact full-width-input">
+                                    </div>
+                                </div>
+                                <div class="hatch-row-full">
+                                    <label>Scale</label>
+                                    <div class="slider-with-input">
+                                        <input type="range" id="layer-industrial-hatch-scale" min="0.1" max="5"
+                                            step="0.1" value="1" class="full-width-slider">
+                                        <input type="number" id="layer-industrial-hatch-scale-num" value="1" step="0.1"
+                                            class="input-compact mini-num">
+                                    </div>
+                                </div>
+                                <div class="hatch-row-full">
+                                    <label>Rotation</label>
+                                    <div class="slider-with-input">
+                                        <input type="range" id="layer-industrial-hatch-rotation" min="0" max="180"
+                                            step="1" value="45" class="full-width-slider">
+                                        <input type="number" id="layer-industrial-hatch-rotation-num" value="45"
+                                            step="1" class="input-compact mini-num">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Layer: Parking -->
+                        <div class="layer-compact-row">
+                            <div class="layer-name-col">
+                                <input type="checkbox" id="layer-parking-visible" class="compact-check">
+                                <label for="layer-parking-visible">ParkP</label>
+                            </div>
+                            <div class="layer-stroke-col">
+                                <input type="color" id="layer-parking-stroke" value="#94a3b8" class="mini-color">
+                                <input type="number" id="layer-parking-width" value="0.5" min="0" step="0.1"
+                                    class="input-compact mini-num">
+                            </div>
+                            <div class="layer-fill-col">
+                                <input type="color" id="layer-parking-fill" value="#e2e8f0" class="mini-color">
+                                <input type="checkbox" id="layer-parking-fill-enabled" class="compact-check" checked>
+                            </div>
+                            <div class="layer-hatch-col">
+                                <input type="checkbox" id="layer-parking-hatched" class="compact-check">
+                                <button id="layer-parking-hatch-trigger" class="hatch-settings-trigger"><svg width="12"
+                                        height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2">
+                                        <circle cx="12" cy="12" r="3"></circle>
+                                        <path
+                                            d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+                                        </path>
+                                    </svg></button>
+                            </div>
+                            <div class="layer-laser-col">
+                                <select id="layer-parking-laser-mode" class="input-compact mini-select"
+                                    style="width:40px;">
+                                    <option value="engrave" selected>Eng</option>
+                                    <option value="score">Sco</option>
+                                </select>
+                                <input type="number" id="layer-parking-power" value="10" class="input-compact mini-num">
+                                <input type="number" id="layer-parking-speed" value="200"
+                                    class="input-compact mini-num">
+                            </div>
+                            <div id="layer-parking-hatch-settings" class="layer-extended-settings">
+                                <div class="hatch-row-full">
+                                    <label>Pattern Style</label>
+                                    <select id="layer-parking-hatch-style" class="input-compact full-width-select">
+                                        <option value="lines">Diagonal (Right)</option>
+                                        <option value="lines-left">Diagonal (Left)</option>
+                                        <option value="horizontal">Horizontal</option>
+                                        <option value="vertical">Vertical</option>
+                                        <option value="grid">Grid (Square)</option>
+                                        <option value="crosshatch">Crosshatch</option>
+                                        <option value="dots">Dots (Small)</option>
+                                        <option value="dots-large">Dots (Large)</option>
+                                        <option value="hexagons">Hexagons</option>
+                                        <option value="bricks">Bricks</option>
+                                        <option value="waves">Waves</option>
+                                        <option value="zigzag">Zigzag</option>
+                                        <option value="dashed">Dashed Lines</option>
+                                        <option value="stars">Stars</option>
+                                        <option value="squares">Squares</option>
+                                        <option value="text">Custom Text</option>
+                                    </select>
+                                </div>
+                                <div class="hatch-row-full hatch-text-row" style="display:none;"
+                                    id="layer-parking-hatch-text-row">
+                                    <label>Hatch Text</label>
+                                    <input type="text" id="layer-parking-hatch-text" value="P"
+                                        class="input-compact full-width-input">
+                                </div>
+                                <div class="hatch-row-full compact-row-inputs">
+                                    <div class="col-half">
+                                        <label>Color</label>
+                                        <input type="color" id="layer-parking-hatch-color" value="#000000"
+                                            class="mini-color full-width-input">
+                                    </div>
+                                    <div class="col-half">
+                                        <label>Stroke</label>
+                                        <input type="number" id="layer-parking-hatch-width" value="0.5" step="0.1"
+                                            min="0.1" class="input-compact full-width-input">
+                                    </div>
+                                </div>
+                                <div class="hatch-row-full">
+                                    <label>Scale</label>
+                                    <div class="slider-with-input">
+                                        <input type="range" id="layer-parking-hatch-scale" min="0.1" max="5" step="0.1"
+                                            value="1" class="full-width-slider">
+                                        <input type="number" id="layer-parking-hatch-scale-num" value="1" step="0.1"
+                                            class="input-compact mini-num">
+                                    </div>
+                                </div>
+                                <div class="hatch-row-full">
+                                    <label>Rotation</label>
+                                    <div class="slider-with-input">
+                                        <input type="range" id="layer-parking-hatch-rotation" min="0" max="180" step="1"
+                                            value="45" class="full-width-slider">
+                                        <input type="number" id="layer-parking-hatch-rotation-num" value="45" step="1"
+                                            class="input-compact mini-num">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tip-text">
+                        <small>Turn on Vector Mode to fetch editable paths from Overpass API. This may take a few
+                            seconds.</small>
+                    </div>
+                </div>
+
+                <div class="section size-section">
+                    <h2>Dimensions & Shape</h2>
+                    <div class="grid-2">
+                        <div class="input-group">
+                            <label>W (mm)</label>
+                            <input type="number" id="map-width" value="200" min="50" max="1000">
+                        </div>
+                        <div class="input-group">
+                            <label>H (mm)</label>
+                            <input type="number" id="map-height" value="200" min="50" max="1000">
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>Corner Radius (mm)</label>
+                        <input type="range" id="map-radius" value="0" min="0" max="100">
+                    </div>
+                    <div class="input-group">
+                        <label>Paper Color</label>
+                        <div class="row-inputs">
+                            <input type="color" id="map-bg-color" value="#ffffff">
+                            <span style="font-size: 0.8rem; color: var(--text-muted);">Background</span>
+                        </div>
+                    </div>
+                    <div class="presets">
+                        <button class="chip" data-w="210" data-h="297">A4</button>
+                        <button class="chip" data-w="297" data-h="420">A3</button>
+                        <button class="chip" data-w="200" data-h="200">Square</button>
+                    </div>
+                </div>
+
+                <div class="section label-config-section">
+                    <h2>Label Styling</h2>
+                    <div class="grid-2">
+                        <div class="input-group">
+                            <label>Font</label>
+                            <select id="font-select">
+                                <option value="'Outfit', sans-serif">Sans Serif</option>
+                                <option value="'Playfair Display', serif">Serif</option>
+                                <option value="'Source Code Pro', monospace">Mono</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label>Size</label>
+                            <input type="number" id="font-size" value="14" min="8" max="40">
+                        </div>
+                    </div>
+                    <div class="row-center">
+                        <input type="checkbox" id="bubble-check"> <label for="bubble-check" class="inline">Show Bubble
+                            Background</label>
+                    </div>
+                </div>
+
+                <div class="section marker-section">
+                    <h2>Pins & Labels</h2>
+                    <div class="input-group">
+                        <div class="search-box">
+                            <input type="text" id="marker-text" placeholder="Label text...">
+                            <button id="add-marker-btn" title="Add Pin">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                                    <circle cx="12" cy="10" r="3"></circle>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div id="marker-list" class="marker-list">
+                        <!-- Individual markers will be injected here -->
+                    </div>
+                    <div class="tip-text">
+                        <small>Pin will appear at center. Drag it to position.</small>
+                    </div>
+                </div>
+
+                <div class="section export-section">
+                    <button id="export-jpg-btn" class="btn primary">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" style="margin-right:8px; vertical-align:middle">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                        Export JPG
+                    </button>
+                </div>
             </div>
         </aside>
 

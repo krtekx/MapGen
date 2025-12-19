@@ -119,6 +119,14 @@ function initMap() {
     }).addTo(state.map);
 }
 
+const syncMapStyleUI = (val) => {
+    const styleBtns = document.querySelectorAll('.style-btn');
+    styleBtns.forEach(b => {
+        if (b.dataset.val === val) b.classList.add('active');
+        else b.classList.remove('active');
+    });
+};
+
 function setMapStyle(style) {
     const mapDiv = document.getElementById('map');
     let url = '';
@@ -236,12 +244,7 @@ function setupControls() {
     // Map Style
     // Map Style Buttons
     const styleBtns = document.querySelectorAll('.style-btn');
-    const syncMapStyleUI = (val) => {
-        styleBtns.forEach(b => {
-            if (b.dataset.val === val) b.classList.add('active');
-            else b.classList.remove('active');
-        });
-    };
+
 
     styleBtns.forEach(btn => {
         btn.addEventListener('click', (e) => {
@@ -1224,6 +1227,9 @@ async function exportJpg() {
         btn.disabled = true;
         btn.innerText = "Generating JPG...";
 
+        StatusLog.log("Starting JPG Export (4x Scale)...", "info");
+        StatusLog.progress(10);
+
         const scale = 4; // High definition capture
         const mapElement = document.getElementById('map-wrapper');
 
@@ -1234,22 +1240,29 @@ async function exportJpg() {
             backgroundColor: state.settings.backgroundColor,
             logging: false,
             allowTaint: true,
+            scrollX: 0,
+            scrollY: 0,
+            x: window.scrollX + mapElement.getBoundingClientRect().left,
+            y: window.scrollY + mapElement.getBoundingClientRect().top,
+            width: mapElement.offsetWidth,
+            height: mapElement.offsetHeight,
             onclone: (clonedDoc) => {
+                StatusLog.log("Cloning DOM for capture...", "info");
+                StatusLog.progress(30);
                 const clonedWrapper = clonedDoc.getElementById('map-wrapper');
-                clonedWrapper.style.transform = 'none';
-                clonedWrapper.style.margin = '0';
+                // Do NOT reset transform: none here as it might move Leaflet components
 
-                // CRITICAL: Copy all global SVG patterns into the cloned map container
-                // html2canvas needs the patterns to be within the captured context or accessible.
+                // CRITICAL: Copy all global SVG patterns into EVERY SVG element found in the clone
                 const originalDefs = document.querySelector('defs');
                 if (originalDefs) {
-                    const clonedSvg = clonedWrapper.querySelector('svg');
-                    if (clonedSvg) {
+                    const svgs = clonedWrapper.querySelectorAll('svg');
+                    svgs.forEach(svg => {
                         const newDefs = originalDefs.cloneNode(true);
-                        clonedSvg.insertBefore(newDefs, clonedSvg.firstChild);
-                    } else {
-                        // If no SVG found yet (maybe Leaflet hasn't rendered it in clone?), 
-                        // we can append it to the wrapper as a hidden SVG.
+                        svg.insertBefore(newDefs, svg.firstChild);
+                    });
+
+                    // If NO SVG found (raster mode might not have them), check defs presence
+                    if (svgs.length === 0) {
                         const hiddenSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
                         hiddenSvg.style.display = 'none';
                         hiddenSvg.appendChild(originalDefs.cloneNode(true));
@@ -1259,12 +1272,22 @@ async function exportJpg() {
             }
         });
 
+        StatusLog.log("Canvas generated, encoding JPG...", "info");
+        StatusLog.progress(80);
+
         // Download as JPG
         const imgData = canvas.toDataURL('image/jpeg', 0.95);
         downloadFile(imgData, `map-export-${Date.now()}.jpg`, 'image/jpeg');
 
+        StatusLog.log("Export successful!", "info");
+        StatusLog.progress(100);
+
+        setTimeout(() => StatusLog.progress(0), 2000);
+
     } catch (e) {
         console.error("JPG Export failed:", e);
+        StatusLog.log(`Export failed: ${e.message}`, "error");
+        StatusLog.progress(0);
         alert("Export failed: " + e.message);
     } finally {
         btn.innerHTML = originalText;
@@ -1273,51 +1296,154 @@ async function exportJpg() {
 } function applyGraphicTheme(themeId) {
     const themes = {
         industrial: {
-            style: 'standard',
-            bg: '#1a1a1a',
+            style: 'standard', bg: '#0f172a',
             layers: {
-                buildings: { visible: true, stroke: '#f97316', width: 0.8, fill: '#334155', fillEnabled: true, hatched: true, hatchStyle: 'lines', hatchScale: 0.8, hatchRotation: 45, hatchColor: '#f97316', hatchWidth: 0.4 },
-                water: { visible: true, stroke: '#0f172a', width: 1.5, fill: '#1e293b', fillEnabled: true, hatched: false },
-                streets: { visible: true, stroke: '#64748b', width: 1.2, fill: '#ffffff', fillEnabled: false },
-                parks: { visible: true, stroke: '#064e3b', width: 0, fill: '#064e3b', fillEnabled: true, hatched: true, hatchStyle: 'dots', hatchScale: 1.2, hatchColor: '#059669' },
-                railways: { visible: true, stroke: '#fbbf24', width: 2, fill: 'none', fillEnabled: false },
-                industrial: { visible: true, stroke: '#475569', width: 0.5, fill: '#334155', fillEnabled: true, hatched: true, hatchStyle: 'grid', hatchScale: 1.5, hatchColor: '#64748b' }
+                buildings: { visible: true, stroke: '#f97316', width: 0.8, fillEnabled: true, fill: '#1e293b', hatched: true, hatchStyle: 'lines', hatchScale: 0.8, hatchColor: '#f97316' },
+                water: { visible: true, stroke: '#334155', width: 1.2, fillEnabled: true, fill: '#0f172a', hatched: false },
+                streets: { visible: true, stroke: '#64748b', width: 1.0, fillEnabled: false },
+                parks: { visible: true, stroke: '#064e3b', width: 0.3, fillEnabled: true, fill: '#064e3b', hatched: true, hatchStyle: 'dots', hatchScale: 1.5, hatchColor: '#059669' },
+                industrial: { visible: true, stroke: '#f97316', width: 0.4, fillEnabled: true, fill: '#334155', hatched: true, hatchStyle: 'grid', hatchScale: 2.0, hatchColor: '#475569' }
             }
         },
         blueprint: {
-            style: 'blueprint',
-            bg: '#001a4d',
+            style: 'blueprint', bg: '#001a4d',
             layers: {
-                buildings: { visible: true, stroke: '#ffffff', width: 0.8, fill: 'none', fillEnabled: false, hatched: false },
-                water: { visible: true, stroke: '#00ffff', width: 1, fill: '#003366', fillEnabled: true, hatched: true, hatchStyle: 'waves', hatchScale: 1, hatchRotation: 0, hatchColor: '#00ffff', hatchWidth: 0.3 },
-                streets: { visible: true, stroke: '#ffffff', width: 1.5, fill: 'none', fillEnabled: false },
-                parks: { visible: true, stroke: '#00ff00', width: 0.3, fill: 'none', fillEnabled: false, hatched: true, hatchStyle: 'grid', hatchScale: 0.5, hatchColor: '#00ff00' },
-                railways: { visible: true, stroke: '#ffffff', width: 1, fill: 'none', fillEnabled: false },
-                industrial: { visible: false }
+                buildings: { visible: true, stroke: '#ffffff', width: 0.6, fillEnabled: false, hatched: false },
+                water: { visible: true, stroke: '#00ffff', width: 1.0, fillEnabled: true, fill: '#003366', hatched: true, hatchStyle: 'waves', hatchScale: 1.0, hatchColor: '#00ffff' },
+                streets: { visible: true, stroke: '#ffffff', width: 1.2, fillEnabled: false },
+                parks: { visible: true, stroke: '#ffffff', width: 0.2, fillEnabled: true, fill: '#001a4d', hatched: true, hatchStyle: 'grid', hatchScale: 0.6, hatchColor: '#ffffff' }
             }
         },
         nature: {
-            style: 'light',
-            bg: '#fdf6e3',
+            style: 'light', bg: '#fdf6e3',
             layers: {
-                buildings: { visible: true, stroke: '#8b4513', width: 0.5, fill: '#eee8d5', fillEnabled: true, hatched: false },
-                water: { visible: true, stroke: '#268bd2', width: 1.5, fill: '#b58900', fillEnabled: true, hatched: true, hatchStyle: 'waves', hatchScale: 1.5, hatchColor: '#268bd2' },
-                streets: { visible: true, stroke: '#93a1a1', width: 0.8, fill: '#ffffff', fillEnabled: false },
-                parks: { visible: true, stroke: '#859900', width: 0, fill: '#859900', fillEnabled: true, hatched: true, hatchStyle: 'text', hatchText: 'TREE', hatchScale: 1.2, hatchColor: '#22863a' },
-                railways: { visible: true, stroke: '#586e75', width: 1.2, fill: 'none', fillEnabled: false },
-                industrial: { visible: false }
+                buildings: { visible: true, stroke: '#8b4513', width: 0.5, fillEnabled: true, fill: '#eee8d5', hatched: false },
+                water: { visible: true, stroke: '#268bd2', width: 1.5, fillEnabled: true, fill: '#eee8d5', hatched: true, hatchStyle: 'waves', hatchScale: 1.2, hatchColor: '#268bd2' },
+                parks: { visible: true, stroke: '#859900', width: 0.2, fillEnabled: true, fill: '#fdf6e3', hatched: true, hatchStyle: 'text', hatchText: 'TREE', hatchScale: 1.2, hatchColor: '#859900' }
             }
         },
         gold: {
-            style: 'standard',
-            bg: '#000000',
+            style: 'standard', bg: '#000000',
             layers: {
-                buildings: { visible: true, stroke: '#d4af37', width: 1.2, fill: '#d4af37', fillEnabled: true, hatched: true, hatchStyle: 'lines', hatchScale: 0.5, hatchRotation: 0, hatchColor: '#000000', hatchWidth: 0.8 },
-                water: { visible: true, stroke: '#111111', width: 2, fill: '#000000', fillEnabled: true, hatched: false },
-                streets: { visible: true, stroke: '#d4af37', width: 0.5, fill: '#ffffff', fillEnabled: false },
-                parks: { visible: true, stroke: '#d4af37', width: 0.3, fill: '#000000', fillEnabled: true, hatched: true, hatchStyle: 'squares', hatchScale: 0.8, hatchColor: '#d4af37' },
-                railways: { visible: true, stroke: '#d4af37', width: 0.5, fill: '#000000', fillEnabled: false },
-                industrial: { visible: false }
+                buildings: { visible: true, stroke: '#d4af37', width: 1.5, fillEnabled: true, fill: '#000000', hatched: true, hatchStyle: 'lines', hatchScale: 0.4, hatchRotation: 45, hatchColor: '#d4af37' },
+                water: { visible: true, stroke: '#111111', width: 2.0, fillEnabled: true, fill: '#000000', hatched: false },
+                streets: { visible: true, stroke: '#d4af37', width: 0.4, fillEnabled: false },
+                parks: { visible: true, stroke: '#d4af37', width: 0.1, fillEnabled: true, fill: '#000000', hatched: true, hatchStyle: 'squares', hatchScale: 0.8, hatchColor: '#d4af37' }
+            }
+        },
+        retro: {
+            style: 'vintage', bg: '#3c2a21',
+            layers: {
+                buildings: { visible: true, stroke: '#d4adcf', width: 1.0, fillEnabled: true, fill: '#51362a', hatched: true, hatchStyle: 'crosshatch', hatchScale: 1.5, hatchColor: '#d4adcf' },
+                water: { visible: true, stroke: '#7fb5b5', width: 1.2, fillEnabled: true, fill: '#3c2a21', hatched: true, hatchStyle: 'zigzag', hatchScale: 1.0, hatchColor: '#7fb5b5' },
+                streets: { visible: true, stroke: '#e5c29f', width: 1.5, fillEnabled: false }
+            }
+        },
+        cyberpunk: {
+            style: 'night', bg: '#0d0221',
+            layers: {
+                buildings: { visible: true, stroke: '#ff00ff', width: 1.2, fillEnabled: true, fill: '#0d0221', hatched: true, hatchStyle: 'grid', hatchScale: 1.0, hatchColor: '#00ffff' },
+                water: { visible: true, stroke: '#00ffff', width: 2.0, fillEnabled: false, hatched: true, hatchStyle: 'zigzag', hatchScale: 0.8, hatchColor: '#00ffff' },
+                streets: { visible: true, stroke: '#00ff00', width: 0.8, fillEnabled: false }
+            }
+        },
+        minimal: {
+            style: 'light', bg: '#ffffff',
+            layers: {
+                buildings: { visible: true, stroke: '#eeeeee', width: 0.5, fillEnabled: true, fill: '#fcfcfc', hatched: false },
+                water: { visible: true, stroke: '#dddddd', width: 1.0, fillEnabled: false, hatched: true, hatchStyle: 'lines', hatchScale: 2.0, hatchColor: '#eeeeee' },
+                streets: { visible: true, stroke: '#000000', width: 0.4, fillEnabled: false }
+            }
+        },
+        technical: {
+            style: 'standard', bg: '#222222',
+            layers: {
+                buildings: { visible: true, stroke: '#00ff00', width: 0.2, fillEnabled: false, hatched: true, hatchStyle: 'grid', hatchScale: 0.4, hatchColor: '#00ff00', hatchWidth: 0.1 },
+                water: { visible: true, stroke: '#0088ff', width: 1.0, fillEnabled: false, hatched: true, hatchStyle: 'lines', hatchScale: 1.0, hatchColor: '#0088ff' },
+                streets: { visible: true, stroke: '#ffffff', width: 0.8, fillEnabled: false },
+                railways: { visible: true, stroke: '#ff0000', width: 1.5, fillEnabled: false }
+            }
+        },
+        forest: {
+            style: 'light', bg: '#1b2e1b',
+            layers: {
+                buildings: { visible: true, stroke: '#2d4a2d', width: 1.0, fillEnabled: true, fill: '#1b2e1b', hatched: true, hatchStyle: 'dots', hatchScale: 2.0, hatchColor: '#3c5e3c' },
+                parks: { visible: true, stroke: '#50fa7b', width: 0, fillEnabled: true, fill: '#1b2e1b', hatched: true, hatchStyle: 'text', hatchText: 'TREE', hatchScale: 1.5, hatchColor: '#50fa7b' },
+                water: { visible: true, stroke: '#8be9fd', width: 1.5, fillEnabled: false }
+            }
+        },
+        sketch: {
+            style: 'standard', bg: '#fafafa',
+            layers: {
+                buildings: { visible: true, stroke: '#333333', width: 1.5, fillEnabled: false, hatched: true, hatchStyle: 'lines', hatchScale: 0.5, hatchRotation: 15, hatchColor: '#333333' },
+                water: { visible: true, stroke: '#333333', width: 1.0, fillEnabled: false, hatched: true, hatchStyle: 'zigzag', hatchScale: 2.0, hatchColor: '#333333' }
+            }
+        },
+        matrix: {
+            style: 'night', bg: '#000000',
+            layers: {
+                buildings: { visible: true, stroke: '#00ff00', width: 0.8, fillEnabled: true, fill: '#000000', hatched: true, hatchStyle: 'text', hatchText: '10', hatchScale: 2.0, hatchColor: '#003300' },
+                streets: { visible: true, stroke: '#00ff00', width: 0.5, fillEnabled: false }
+            }
+        },
+        arctic: {
+            style: 'light', bg: '#f0f8ff',
+            layers: {
+                water: { visible: true, stroke: '#ffffff', width: 5.0, fillEnabled: true, fill: '#ffffff', hatched: true, hatchStyle: 'zigzag', hatchScale: 1.0, hatchColor: '#b0e0e6' },
+                buildings: { visible: true, stroke: '#708090', width: 0.5, fillEnabled: true, fill: '#e6f2ff' }
+            }
+        },
+        magma: {
+            style: 'standard', bg: '#1a0000',
+            layers: {
+                buildings: { visible: true, stroke: '#ff4500', width: 1.0, fillEnabled: true, fill: '#1a0000', hatched: true, hatchStyle: 'grid', hatchScale: 0.8, hatchColor: '#800000' },
+                streets: { visible: true, stroke: '#ff8c00', width: 0.6, fillEnabled: false },
+                water: { visible: true, stroke: '#ff0000', width: 2.0, fillEnabled: true, fill: '#330000' }
+            }
+        },
+        blueprint_alt: {
+            style: 'blueprint', bg: '#002244',
+            layers: {
+                buildings: { visible: true, stroke: '#ffffff', width: 0.2, fillEnabled: true, fill: '#002244', hatched: true, hatchStyle: 'crosshatch', hatchScale: 0.5, hatchColor: '#004488', hatchWidth: 0.1 }
+            }
+        },
+        neon_pink: {
+            style: 'night', bg: '#220022',
+            layers: {
+                streets: { visible: true, stroke: '#ff00ff', width: 1.5, fillEnabled: false },
+                buildings: { visible: true, stroke: '#ff00ff', width: 0.5, fillEnabled: true, fill: '#110011', hatched: true, hatchStyle: 'lines', hatchScale: 1.0, hatchColor: '#ff00ff' }
+            }
+        },
+        chalkboard: {
+            style: 'standard', bg: '#2f4f4f',
+            layers: {
+                buildings: { visible: true, stroke: '#ffffff', width: 1.2, fillEnabled: false, hatched: true, hatchStyle: 'lines', hatchScale: 0.8, hatchRotation: -20, hatchColor: '#ffffff', hatchWidth: 0.3 },
+                streets: { visible: true, stroke: '#cccccc', width: 0.8, fillEnabled: false }
+            }
+        },
+        vintage_gold: {
+            style: 'vintage', bg: '#4a3728',
+            layers: {
+                buildings: { visible: true, stroke: '#d4af37', width: 1.0, fillEnabled: true, fill: '#332211', hatched: true, hatchStyle: 'lines', hatchScale: 1.5, hatchColor: '#d4af37' }
+            }
+        },
+        deep_sea: {
+            style: 'night', bg: '#000033',
+            layers: {
+                water: { visible: true, stroke: '#00ffff', width: 3.0, fillEnabled: true, fill: '#000022', hatched: true, hatchStyle: 'waves', hatchScale: 1.0, hatchColor: '#0055aa' }
+            }
+        },
+        industrial_raw: {
+            style: 'standard', bg: '#222222',
+            layers: {
+                buildings: { visible: true, stroke: '#888888', width: 0.4, fillEnabled: true, fill: '#222222', hatched: true, hatchStyle: 'grid', hatchScale: 0.5, hatchColor: '#444444' }
+            }
+        },
+        sunset: {
+            style: 'light', bg: '#ffebcd',
+            layers: {
+                buildings: { visible: true, stroke: '#ff4500', width: 0.8, fillEnabled: true, fill: '#ffebcd', hatched: true, hatchStyle: 'lines', hatchScale: 1.0, hatchColor: '#ff4500' },
+                water: { visible: true, stroke: '#ff6347', width: 1.5, fillEnabled: false, hatched: true, hatchStyle: 'waves', hatchScale: 1.0, hatchColor: '#ff6347' }
             }
         }
     };
@@ -1338,21 +1464,47 @@ async function exportJpg() {
     Object.keys(t.layers).forEach(key => {
         const conf = t.layers[key];
         Object.assign(state.activeLayers[key], conf);
+    });
 
-        // Update UI inputs to match
+    // Sync all inputs to reflect state
+    Object.keys(state.activeLayers).forEach(key => {
+        const conf = state.activeLayers[key];
+        const row = document.getElementById(`layer-${key}-visible`)?.closest('.layer-compact-row');
+        if (!row) return;
+
+        // Visible
         if (conf.visible !== undefined) document.getElementById(`layer-${key}-visible`).checked = conf.visible;
+        // Stroke
         if (conf.stroke) document.getElementById(`layer-${key}-stroke`).value = conf.stroke;
         if (conf.width !== undefined) document.getElementById(`layer-${key}-width`).value = conf.width;
+        // Fill
         if (conf.fill) document.getElementById(`layer-${key}-fill`).value = conf.fill;
         if (conf.fillEnabled !== undefined) document.getElementById(`layer-${key}-fill-enabled`).checked = conf.fillEnabled;
+        // Hatch
         if (conf.hatched !== undefined) {
             const hb = document.getElementById(`layer-${key}-hatched`);
-            if (hb) {
-                hb.checked = conf.hatched;
-                const hatchSettings = document.getElementById(`layer-${key}-hatch-settings`);
-                if (hatchSettings) {
-                    hatchSettings.classList.toggle('visible', conf.hatched);
-                }
+            if (hb) hb.checked = conf.hatched;
+            const settings = document.getElementById(`layer-${key}-hatch-settings`);
+            if (settings) settings.classList.toggle('visible', conf.hatched);
+        }
+        // Hatch Details
+        if (conf.hatchStyle) document.getElementById(`layer-${key}-hatch-style`).value = conf.hatchStyle;
+        if (conf.hatchColor) document.getElementById(`layer-${key}-hatch-color`).value = conf.hatchColor;
+        if (conf.hatchWidth !== undefined) document.getElementById(`layer-${key}-hatch-width`).value = conf.hatchWidth;
+        if (conf.hatchScale !== undefined) {
+            document.getElementById(`layer-${key}-hatch-scale`).value = conf.hatchScale;
+            document.getElementById(`layer-${key}-hatch-scale-num`).value = conf.hatchScale;
+        }
+        if (conf.hatchRotation !== undefined) {
+            document.getElementById(`layer-${key}-hatch-rotation`).value = conf.hatchRotation;
+            document.getElementById(`layer-${key}-hatch-rotation-num`).value = conf.hatchRotation;
+        }
+        if (conf.hatchText) {
+            const txtInp = document.getElementById(`layer-${key}-hatch-text`);
+            if (txtInp) {
+                txtInp.value = conf.hatchText;
+                const txtRow = document.getElementById(`layer-${key}-hatch-text-row`);
+                if (txtRow) txtRow.style.display = conf.hatchStyle === 'text' ? 'block' : 'none';
             }
         }
     });
@@ -1361,12 +1513,10 @@ async function exportJpg() {
     if (state.vectorMode) {
         renderVectorLayers();
     } else {
-        // If not in vector mode, maybe turn it on? 
-        // User probably expects the theme to work, so let's enable vector mode.
+        // If not in vector mode, enable it
         document.getElementById('vector-mode-toggle').checked = true;
         state.vectorMode = true;
 
-        // Trigger same logic as toggle
         const layerList = document.getElementById('layer-toggles');
         layerList.classList.remove('disabled');
 
