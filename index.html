@@ -11,8 +11,8 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700&family=Playfair+Display:wght@400;700&family=Source+Code+Pro:wght@400;600&display=swap"
         rel="stylesheet">
-  <script type="module" crossorigin src="/MapGen/assets/index-Ds0I7wlI.js"></script>
-  <link rel="stylesheet" crossorigin href="/MapGen/assets/index-Ko2-HUkO.css">
+  <script type="module" crossorigin src="./assets/index-CXMxrpqy.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-Ko2-HUkO.css">
 </head>
 
 <body>
@@ -94,7 +94,35 @@
                                 <div class="row-inputs">
                                     <input type="color" id="layer-buildings-stroke" value="#64748b">
                                     <input type="number" id="layer-buildings-width" value="1" min="0" step="0.1"
-                                        class="w-num">
+                                        class="w-num" title="Stroke Width">
+                                </div>
+                            </div>
+                            <div class="control-group">
+                                <label>Fill & Pattern</label>
+                                <div class="row-inputs">
+                                    <input type="color" id="layer-buildings-fill" value="#64748b">
+                                    <input type="checkbox" id="layer-buildings-fill-enabled" checked
+                                        title="Enable Fill">
+                                    <input type="checkbox" id="layer-buildings-hatched" title="Use Pattern">
+                                </div>
+                                <div class="row-inputs" style="margin-top:4px;">
+                                    <select id="layer-buildings-hatch-style" title="Pattern Style" style="flex:1">
+                                        <option value="lines">Lines</option>
+                                        <option value="grid">Grid (Cross)</option>
+                                        <option value="dots">Dots</option>
+                                        <option value="dashed">Dashed Lines</option>
+                                        <option value="zigzag">Zigzag</option>
+                                    </select>
+                                </div>
+                                <div class="row-inputs" style="margin-top:4px;">
+                                    <label style="font-size:0.6rem; min-width:30px;">Size</label>
+                                    <input type="range" id="layer-buildings-hatch-scale" min="0.5" max="5" step="0.1"
+                                        value="1" style="flex:1">
+                                </div>
+                                <div class="row-inputs" style="margin-top:4px;">
+                                    <label style="font-size:0.6rem; min-width:30px;">Rot</label>
+                                    <input type="range" id="layer-buildings-hatch-rotation" min="0" max="180" step="1"
+                                        value="45" style="flex:1">
                                 </div>
                             </div>
                             <div class="control-group">
@@ -194,7 +222,34 @@
                                 <div class="row-inputs">
                                     <input type="color" id="layer-parks-stroke" value="#22c55e">
                                     <input type="number" id="layer-parks-width" value="0" min="0" step="0.1"
-                                        class="w-num">
+                                        class="w-num" title="Stroke Width">
+                                </div>
+                            </div>
+                            <div class="control-group">
+                                <label>Fill & Pattern</label>
+                                <div class="row-inputs">
+                                    <input type="color" id="layer-parks-fill" value="#22c55e">
+                                    <input type="checkbox" id="layer-parks-fill-enabled" checked title="Enable Fill">
+                                    <input type="checkbox" id="layer-parks-hatched" title="Use Pattern">
+                                </div>
+                                <div class="row-inputs" style="margin-top:4px;">
+                                    <select id="layer-parks-hatch-style" title="Pattern Style" style="flex:1">
+                                        <option value="lines">Lines</option>
+                                        <option value="grid">Grid (Cross)</option>
+                                        <option value="dots">Dots</option>
+                                        <option value="dashed">Dashed Lines</option>
+                                        <option value="zigzag">Zigzag</option>
+                                    </select>
+                                </div>
+                                <div class="row-inputs" style="margin-top:4px;">
+                                    <label style="font-size:0.6rem; min-width:30px;">Size</label>
+                                    <input type="range" id="layer-parks-hatch-scale" min="0.5" max="5" step="0.1"
+                                        value="1" style="flex:1">
+                                </div>
+                                <div class="row-inputs" style="margin-top:4px;">
+                                    <label style="font-size:0.6rem; min-width:30px;">Rot</label>
+                                    <input type="range" id="layer-parks-hatch-rotation" min="0" max="180" step="1"
+                                        value="45" style="flex:1">
                                 </div>
                             </div>
                             <div class="control-group">
