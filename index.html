@@ -23,7 +23,13 @@
                 </svg>
             </button>
             <div class="header">
-                <h1>MAP<span>GEN</span></h1>
+                <div class="title-wrap">
+                    <h1>MAP<span>GEN</span></h1>
+                    <div class="version-badge">
+                        <span class="v-num">v1.4.0</span>
+                        <span class="v-date">Dec 19, 2025</span>
+                    </div>
+                </div>
             </div>
 
             <div class="section search-section">
@@ -103,24 +109,38 @@
                                         title="Enable Fill">
                                     <input type="checkbox" id="layer-buildings-hatched" title="Use Pattern">
                                 </div>
-                                <div class="row-inputs" style="margin-top:4px;">
-                                    <select id="layer-buildings-hatch-style" title="Pattern Style" style="flex:1">
-                                        <option value="lines">Lines</option>
-                                        <option value="grid">Grid (Cross)</option>
-                                        <option value="dots">Dots</option>
-                                        <option value="dashed">Dashed Lines</option>
-                                        <option value="zigzag">Zigzag</option>
-                                    </select>
-                                </div>
-                                <div class="row-inputs" style="margin-top:4px;">
-                                    <label style="font-size:0.6rem; min-width:30px;">Size</label>
-                                    <input type="range" id="layer-buildings-hatch-scale" min="0.5" max="5" step="0.1"
-                                        value="1" style="flex:1">
-                                </div>
-                                <div class="row-inputs" style="margin-top:4px;">
-                                    <label style="font-size:0.6rem; min-width:30px;">Rot</label>
-                                    <input type="range" id="layer-buildings-hatch-rotation" min="0" max="180" step="1"
-                                        value="45" style="flex:1">
+                                <div id="layer-buildings-hatch-settings" class="hatch-settings">
+                                    <div class="hatch-row">
+                                        <select id="layer-buildings-hatch-style" class="hatch-style-select">
+                                            <option value="lines">Diagonal Right (Lines)</option>
+                                            <option value="lines-left">Diagonal Left</option>
+                                            <option value="horizontal">Horizontal</option>
+                                            <option value="vertical">Vertical</option>
+                                            <option value="grid">Grid (Square)</option>
+                                            <option value="crosshatch">Crosshatch (Small)</option>
+                                            <option value="dots">Dots (Small)</option>
+                                            <option value="dots-large">Dots (Large)</option>
+                                            <option value="dashed">Dashed Lines</option>
+                                            <option value="zigzag">Zigzag</option>
+                                            <option value="waves">Waves</option>
+                                            <option value="hexagons">Hexagons</option>
+                                            <option value="bricks">Bricks</option>
+                                            <option value="stars">Stars</option>
+                                            <option value="squares">Squares</option>
+                                        </select>
+                                    </div>
+                                    <div class="hatch-row">
+                                        <label>Size</label>
+                                        <input type="range" id="layer-buildings-hatch-scale" min="0.5" max="5"
+                                            step="0.1" value="1">
+                                        <span class="hatch-val" id="layer-buildings-hatch-scale-val">1.0</span>
+                                    </div>
+                                    <div class="hatch-row">
+                                        <label>Rot</label>
+                                        <input type="range" id="layer-buildings-hatch-rotation" min="0" max="180"
+                                            step="1" value="45">
+                                        <span class="hatch-val" id="layer-buildings-hatch-rotation-val">45°</span>
+                                    </div>
                                 </div>
                             </div>
                             <div class="control-group">
@@ -129,6 +149,7 @@
                                     <select id="layer-buildings-laser-mode" class="laser-mode">
                                         <option value="engrave" selected>Engrave</option>
                                         <option value="score">Score</option>
+                                        <option value="cut">Cut</option>
                                     </select>
                                     <input type="number" id="layer-buildings-power" value="10" placeholder="P"
                                         class="w-num" title="Power">
@@ -160,6 +181,7 @@
                                     <select id="layer-water-laser-mode" class="laser-mode">
                                         <option value="engrave" selected>Engrave</option>
                                         <option value="score">Score</option>
+                                        <option value="cut">Cut</option>
                                     </select>
                                     <input type="number" id="layer-water-power" value="15" placeholder="P" class="w-num"
                                         title="Power">
@@ -191,6 +213,7 @@
                                     <select id="layer-streets-laser-mode" class="laser-mode">
                                         <option value="engrave">Engrave</option>
                                         <option value="score" selected>Score</option>
+                                        <option value="cut">Cut</option>
                                     </select>
                                     <input type="number" id="layer-streets-power" value="20" placeholder="P"
                                         class="w-num" title="Power">
@@ -230,24 +253,38 @@
                                     <input type="checkbox" id="layer-parks-fill-enabled" checked title="Enable Fill">
                                     <input type="checkbox" id="layer-parks-hatched" title="Use Pattern">
                                 </div>
-                                <div class="row-inputs" style="margin-top:4px;">
-                                    <select id="layer-parks-hatch-style" title="Pattern Style" style="flex:1">
-                                        <option value="lines">Lines</option>
-                                        <option value="grid">Grid (Cross)</option>
-                                        <option value="dots">Dots</option>
-                                        <option value="dashed">Dashed Lines</option>
-                                        <option value="zigzag">Zigzag</option>
-                                    </select>
-                                </div>
-                                <div class="row-inputs" style="margin-top:4px;">
-                                    <label style="font-size:0.6rem; min-width:30px;">Size</label>
-                                    <input type="range" id="layer-parks-hatch-scale" min="0.5" max="5" step="0.1"
-                                        value="1" style="flex:1">
-                                </div>
-                                <div class="row-inputs" style="margin-top:4px;">
-                                    <label style="font-size:0.6rem; min-width:30px;">Rot</label>
-                                    <input type="range" id="layer-parks-hatch-rotation" min="0" max="180" step="1"
-                                        value="45" style="flex:1">
+                                <div id="layer-parks-hatch-settings" class="hatch-settings">
+                                    <div class="hatch-row">
+                                        <select id="layer-parks-hatch-style" class="hatch-style-select">
+                                            <option value="lines">Diagonal Right (Lines)</option>
+                                            <option value="lines-left">Diagonal Left</option>
+                                            <option value="horizontal">Horizontal</option>
+                                            <option value="vertical">Vertical</option>
+                                            <option value="grid">Grid (Square)</option>
+                                            <option value="crosshatch">Crosshatch (Small)</option>
+                                            <option value="dots">Dots (Small)</option>
+                                            <option value="dots-large">Dots (Large)</option>
+                                            <option value="dashed">Dashed Lines</option>
+                                            <option value="zigzag">Zigzag</option>
+                                            <option value="waves">Waves</option>
+                                            <option value="hexagons">Hexagons</option>
+                                            <option value="bricks">Bricks</option>
+                                            <option value="stars">Stars</option>
+                                            <option value="squares">Squares</option>
+                                        </select>
+                                    </div>
+                                    <div class="hatch-row">
+                                        <label>Size</label>
+                                        <input type="range" id="layer-parks-hatch-scale" min="0.5" max="5" step="0.1"
+                                            value="1">
+                                        <span class="hatch-val" id="layer-parks-hatch-scale-val">1.0</span>
+                                    </div>
+                                    <div class="hatch-row">
+                                        <label>Rot</label>
+                                        <input type="range" id="layer-parks-hatch-rotation" min="0" max="180" step="1"
+                                            value="45">
+                                        <span class="hatch-val" id="layer-parks-hatch-rotation-val">45°</span>
+                                    </div>
                                 </div>
                             </div>
                             <div class="control-group">
@@ -256,6 +293,7 @@
                                     <select id="layer-parks-laser-mode" class="laser-mode">
                                         <option value="engrave" selected>Engrave</option>
                                         <option value="score">Score</option>
+                                        <option value="cut">Cut</option>
                                     </select>
                                     <input type="number" id="layer-parks-power" value="10" placeholder="P" class="w-num"
                                         title="Power">
@@ -287,6 +325,7 @@
                                     <select id="layer-railways-laser-mode" class="laser-mode">
                                         <option value="engrave">Engrave</option>
                                         <option value="score" selected>Score</option>
+                                        <option value="cut">Cut</option>
                                     </select>
                                     <input type="number" id="layer-railways-power" value="30" placeholder="P"
                                         class="w-num" title="Power">
@@ -318,6 +357,7 @@
                                     <select id="layer-industrial-laser-mode" class="laser-mode">
                                         <option value="engrave" selected>Engrave</option>
                                         <option value="score">Score</option>
+                                        <option value="cut">Cut</option>
                                     </select>
                                     <input type="number" id="layer-industrial-power" value="10" placeholder="P"
                                         class="w-num" title="Power">
@@ -344,11 +384,53 @@
                                 </div>
                             </div>
                             <div class="control-group">
+                                <label>Fill & Pattern</label>
+                                <div class="row-inputs">
+                                    <input type="color" id="layer-parking-fill" value="#e2e8f0">
+                                    <input type="checkbox" id="layer-parking-fill-enabled" checked title="Enable Fill">
+                                    <input type="checkbox" id="layer-parking-hatched" title="Use Pattern">
+                                </div>
+                                <div id="layer-parking-hatch-settings" class="hatch-settings">
+                                    <div class="hatch-row">
+                                        <select id="layer-parking-hatch-style" class="hatch-style-select">
+                                            <option value="lines">Diagonal Right (Lines)</option>
+                                            <option value="lines-left">Diagonal Left</option>
+                                            <option value="horizontal">Horizontal</option>
+                                            <option value="vertical">Vertical</option>
+                                            <option value="grid">Grid (Square)</option>
+                                            <option value="crosshatch">Crosshatch (Small)</option>
+                                            <option value="dots">Dots (Small)</option>
+                                            <option value="dots-large">Dots (Large)</option>
+                                            <option value="dashed">Dashed Lines</option>
+                                            <option value="zigzag">Zigzag</option>
+                                            <option value="waves">Waves</option>
+                                            <option value="hexagons">Hexagons</option>
+                                            <option value="bricks">Bricks</option>
+                                            <option value="stars">Stars</option>
+                                            <option value="squares">Squares</option>
+                                        </select>
+                                    </div>
+                                    <div class="hatch-row">
+                                        <label>Size</label>
+                                        <input type="range" id="layer-parking-hatch-scale" min="0.5" max="5" step="0.1"
+                                            value="1">
+                                        <span class="hatch-val" id="layer-parking-hatch-scale-val">1.0</span>
+                                    </div>
+                                    <div class="hatch-row">
+                                        <label>Rot</label>
+                                        <input type="range" id="layer-parking-hatch-rotation" min="0" max="180" step="1"
+                                            value="45">
+                                        <span class="hatch-val" id="layer-parking-hatch-rotation-val">45°</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="control-group">
                                 <label>Laser Settings</label>
                                 <div class="row-inputs">
                                     <select id="layer-parking-laser-mode" class="laser-mode">
                                         <option value="engrave" selected>Engrave</option>
                                         <option value="score">Score</option>
+                                        <option value="cut">Cut</option>
                                     </select>
                                     <input type="number" id="layer-parking-power" value="10" placeholder="P"
                                         class="w-num" title="Power">
@@ -444,6 +526,11 @@
                     <input type="checkbox" id="export-split-check" style="width: auto; margin-right: 8px;">
                     <label for="export-split-check" class="inline" style="font-size: 0.8rem;">Export Layers Separately
                         (xTool)</label>
+                </div>
+                <div class="row-center" style="margin-bottom: 10px;">
+                    <input type="checkbox" id="export-outline-check" style="width: auto; margin-right: 8px;" checked>
+                    <label for="export-outline-check" class="inline" style="font-size: 0.8rem;">Always Export Frame
+                        Outline (Cut)</label>
                 </div>
                 <button id="export-btn" class="btn primary">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"

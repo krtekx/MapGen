@@ -25,19 +25,20 @@ const state = {
     vectorLayers: {}, // Stores Leaflet Layer references
     activeLayers: {
         streets: { visible: true, stroke: '#333333', width: 1, fill: '#ffffff', fillEnabled: false, hatched: false, labelsEnabled: false, laserMode: 'score', power: 20, speed: 100 },
-        water: { visible: true, stroke: '#3b82f6', width: 1, fill: '#3b82f6', fillEnabled: true, hatched: false, laserMode: 'engrave', power: 15, speed: 150 },
+        water: { visible: true, stroke: '#3b82f6', width: 1, fill: '#3b82f6', fillEnabled: false, hatched: false, laserMode: 'engrave', power: 15, speed: 150 },
         buildings: { visible: true, stroke: '#64748b', width: 1, fill: '#64748b', fillEnabled: true, hatched: false, hatchStyle: 'lines', hatchScale: 1, hatchRotation: 45, laserMode: 'engrave', power: 10, speed: 200 },
         parks: { visible: true, stroke: '#22c55e', width: 0, fill: '#22c55e', fillEnabled: true, hatched: false, hatchStyle: 'lines', hatchScale: 1, hatchRotation: 45, laserMode: 'engrave', power: 10, speed: 200 },
         railways: { visible: true, stroke: '#475569', width: 1.5, fill: '#000000', fillEnabled: false, hatched: false, laserMode: 'score', power: 30, speed: 80 },
         industrial: { visible: false, stroke: '#94a3b8', width: 0.5, fill: '#cbd5e1', fillEnabled: false, hatched: false, laserMode: 'engrave', power: 10, speed: 200 },
-        parking: { visible: false, stroke: '#94a3b8', width: 0.5, fill: '#e2e8f0', fillEnabled: false, hatched: false, laserMode: 'engrave', power: 10, speed: 200 }
+        parking: { visible: false, stroke: '#94a3b8', width: 0.5, fill: '#e2e8f0', fillEnabled: true, hatched: false, hatchStyle: 'lines', hatchScale: 1, hatchRotation: 45, laserMode: 'engrave', power: 10, speed: 200 }
     },
     settings: {
         fontFamily: "'Outfit', sans-serif",
         fontSize: 14,
         bubble: false,
         mapStyle: 'standard',
-        backgroundColor: '#ffffff'
+        backgroundColor: '#ffffff',
+        frameOutline: true // Default to true as per user request "always export outline"
     }
 };
 
@@ -213,12 +214,12 @@ function setupControls() {
         if (state.vectorMode) {
             layerList.classList.remove('disabled');
             styleSelect.disabled = true;
+            exportBtn.disabled = false;
             exportBtn.innerText = "Export Laser (SVG)";
 
             // Auto Zoom-in if needed
             if (state.map.getZoom() < 15) {
                 state.map.flyTo(state.map.getCenter(), 15);
-                // The moveend/zoomend will trigger the fetch
             } else {
                 fetchAndRenderVectors();
             }
@@ -226,6 +227,7 @@ function setupControls() {
         } else {
             layerList.classList.add('disabled');
             styleSelect.disabled = false;
+            exportBtn.disabled = true;
             exportBtn.innerText = "Export Bitmap (SVG)";
             clearVectorLayers();
             state.tileLayer.setOpacity(1);
@@ -277,11 +279,22 @@ function setupControls() {
         if (fillEnabledBtn) fillEnabledBtn.addEventListener('change', updateStyle);
 
         const hatchedBtn = document.getElementById(`layer-${layer}-hatched`);
-        if (hatchedBtn) hatchedBtn.addEventListener('change', (e) => {
-            state.activeLayers[layer].hatched = e.target.checked;
-            updateStyle();
-            if (state.vectorMode) renderVectorLayers(); // Force re-render of patterns
-        });
+        if (hatchedBtn) {
+            const hatchSettings = document.getElementById(`layer-${layer}-hatch-settings`);
+            hatchedBtn.addEventListener('change', (e) => {
+                state.activeLayers[layer].hatched = e.target.checked;
+                if (hatchSettings) {
+                    hatchSettings.classList.toggle('visible', e.target.checked);
+                }
+                updateStyle();
+                if (state.vectorMode) renderVectorLayers(); // Force re-render of patterns
+            });
+
+            // Initial visibility state
+            if (hatchSettings && hatchedBtn.checked) {
+                hatchSettings.classList.add('visible');
+            }
+        }
 
         // Hatch Patterns
         ['hatch-style', 'hatch-scale', 'hatch-rotation'].forEach(prop => {
@@ -290,6 +303,13 @@ function setupControls() {
                 el.addEventListener('input', (e) => {
                     const camelProp = prop.replace(/-([a-z])/g, (g) => g[1].toUpperCase());
                     state.activeLayers[layer][camelProp] = e.target.value;
+
+                    // Update value display if exists
+                    const valEl = document.getElementById(`layer-${layer}-${prop}-val`);
+                    if (valEl) {
+                        valEl.innerText = e.target.value + (prop === 'hatch-rotation' ? '°' : '');
+                    }
+
                     if (state.vectorMode) renderVectorLayers();
                 });
             }
@@ -319,6 +339,14 @@ function setupControls() {
         state.settings.backgroundColor = e.target.value;
         document.getElementById('map-wrapper').style.backgroundColor = state.settings.backgroundColor;
     });
+
+    // Frame Outline Toggle
+    const outlineCheck = document.getElementById('export-outline-check');
+    if (outlineCheck) {
+        outlineCheck.addEventListener('change', (e) => {
+            state.settings.frameOutline = e.target.checked;
+        });
+    }
 
     // Export
     document.getElementById('export-btn').addEventListener('click', exportMap);
@@ -673,28 +701,81 @@ function renderVectorLayers() {
             };
 
             switch (conf.hatchStyle) {
+                case 'lines-left':
+                    pattern.appendChild(createLine(0, size, size, 0));
+                    break;
+                case 'horizontal':
+                    pattern.appendChild(createLine(0, size / 2, size, size / 2));
+                    break;
+                case 'vertical':
+                    pattern.appendChild(createLine(size / 2, 0, size / 2, size));
+                    break;
                 case 'grid':
                     pattern.appendChild(createLine(0, 0, 0, size));
                     pattern.appendChild(createLine(0, 0, size, 0));
                     break;
+                case 'crosshatch':
+                    pattern.appendChild(createLine(0, 0, size, size));
+                    pattern.appendChild(createLine(0, size, size, 0));
+                    break;
                 case 'dots':
                     const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-                    circle.setAttribute('cx', size / 2);
-                    circle.setAttribute('cy', size / 2);
-                    circle.setAttribute('r', size / 4);
-                    circle.setAttribute('fill', conf.fill);
+                    circle.setAttribute('cx', size / 2); circle.setAttribute('cy', size / 2);
+                    circle.setAttribute('r', size / 6); circle.setAttribute('fill', conf.fill);
                     pattern.appendChild(circle);
+                    break;
+                case 'dots-large':
+                    const circleL = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                    circleL.setAttribute('cx', size / 2); circleL.setAttribute('cy', size / 2);
+                    circleL.setAttribute('r', size / 3); circleL.setAttribute('fill', conf.fill);
+                    pattern.appendChild(circleL);
                     break;
                 case 'dashed':
                     pattern.appendChild(createLine(0, 0, 0, size, `${size / 2},${size / 2}`));
                     break;
                 case 'zigzag':
-                    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-                    path.setAttribute('d', `M 0 ${size} L ${size / 2} 0 L ${size} ${size}`);
-                    path.setAttribute('fill', 'none');
-                    path.setAttribute('stroke', conf.fill);
-                    path.setAttribute('stroke-width', '1');
-                    pattern.appendChild(path);
+                    const pZig = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                    pZig.setAttribute('d', `M 0 ${size} L ${size / 2} 0 L ${size} ${size}`);
+                    pZig.setAttribute('fill', 'none'); pZig.setAttribute('stroke', conf.fill);
+                    pZig.setAttribute('stroke-width', '1');
+                    pattern.appendChild(pZig);
+                    break;
+                case 'waves':
+                    const pWave = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                    pWave.setAttribute('d', `M 0 ${size / 2} Q ${size / 4} 0, ${size / 2} ${size / 2} T ${size} ${size / 2}`);
+                    pWave.setAttribute('fill', 'none'); pWave.setAttribute('stroke', conf.fill);
+                    pWave.setAttribute('stroke-width', '1');
+                    pattern.appendChild(pWave);
+                    break;
+                case 'hexagons':
+                    const pHex = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                    const h = (Math.sqrt(3) / 2) * size;
+                    pHex.setAttribute('d', `M ${size / 4} 0 L ${size * 3 / 4} 0 L ${size} ${h / 2} L ${size * 3 / 4} h L ${size / 4} h L 0 ${h / 2} Z`);
+                    pHex.setAttribute('fill', 'none'); pHex.setAttribute('stroke', conf.fill);
+                    pHex.setAttribute('stroke-width', '1');
+                    pattern.appendChild(pHex);
+                    pattern.setAttribute('height', h);
+                    break;
+                case 'bricks':
+                    pattern.appendChild(createLine(0, 0, size, 0));
+                    pattern.appendChild(createLine(0, size / 2, size, size / 2));
+                    pattern.appendChild(createLine(0, 0, 0, size / 2));
+                    pattern.appendChild(createLine(size / 2, size / 2, size / 2, size));
+                    break;
+                case 'stars':
+                    const pStar = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                    pStar.setAttribute('d', `M ${size / 2} 0 L ${size / 2} ${size} M 0 ${size / 2} L ${size} ${size / 2} M ${size / 4} ${size / 4} L ${size * 3 / 4} ${size * 3 / 4} M ${size * 3 / 4} ${size / 4} L ${size / 4} ${size * 3 / 4}`);
+                    pStar.setAttribute('fill', 'none'); pStar.setAttribute('stroke', conf.fill);
+                    pStar.setAttribute('stroke-width', '1');
+                    pattern.appendChild(pStar);
+                    break;
+                case 'squares':
+                    const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                    rect.setAttribute('x', size / 4); rect.setAttribute('y', size / 4);
+                    rect.setAttribute('width', size / 2); rect.setAttribute('height', size / 2);
+                    rect.setAttribute('fill', 'none'); rect.setAttribute('stroke', conf.fill);
+                    rect.setAttribute('stroke-width', '1');
+                    pattern.appendChild(rect);
                     break;
                 case 'lines':
                 default:
@@ -814,13 +895,9 @@ async function exportMap(isXtool = false) {
         btn.disabled = true;
         btn.innerText = isXtool ? "Optimizing for xTool..." : "Generating SVG...";
 
-        // Force vector mode if exporting for xTool
+        // If isXtool and vectorMode is off, we do a BitMap-to-XCS export
         if (isXtool && !state.vectorMode) {
-            state.vectorMode = true;
-            document.getElementById('vector-mode-toggle').checked = true;
-            updateUIState();
-            // Wait for vectors to load
-            await new Promise(r => setTimeout(r, 2000));
+            return exportXCS(null, null, null, null, true); // true for isBitmapOnly
         }
 
         const widthMm = parseFloat(document.getElementById('map-width').value) || 200;
@@ -851,6 +928,11 @@ async function exportMap(isXtool = false) {
                 throw new Error("Vector data missing. Please toggle Vector Mode off/on.");
             }
 
+            // Special case for native .xcs export
+            if (isXtool) {
+                return exportXCS(geoJsonData, bounds, widthMm, heightMm, false);
+            }
+
             // Group paths
             const groups = { streets: [], water: [], buildings: [], parks: [], railways: [], industrial: [], parking: [] };
 
@@ -859,13 +941,13 @@ async function exportMap(isXtool = false) {
                 const path = geometryToPath(f.geometry, bounds, widthMm, heightMm);
                 if (!path) return;
 
-                if (props.highway && state.activeLayers.streets.visible) groups.streets.push(`<path d="${path}" />`);
-                else if (props.railway && state.activeLayers.railways.visible) groups.railways.push(`<path d="${path}" />`);
-                else if ((props.waterway || props.natural === 'water' || props.landuse === 'reservoir') && state.activeLayers.water.visible) groups.water.push(`<path d="${path}" />`);
-                else if (props.building && state.activeLayers.buildings.visible) groups.buildings.push(`<path d="${path}" />`);
-                else if ((props.leisure === 'park' || props.leisure === 'garden' || props.landuse === 'grass' || props.landuse === 'forest' || props.natural === 'wood' || props.natural === 'scrub' || props.landuse === 'orchard' || props.landuse === 'vineyard') && state.activeLayers.parks.visible) groups.parks.push(`<path d="${path}" />`);
-                else if ((props.landuse === 'industrial' || props.landuse === 'commercial') && state.activeLayers.industrial.visible) groups.industrial.push(`<path d="${path}" />`);
-                else if (props.amenity === 'parking' && state.activeLayers.parking.visible) groups.parking.push(`<path d="${path}" />`);
+                const layerKey = getLayerKey(f);
+                if (!layerKey || !state.activeLayers[layerKey].visible) return;
+
+                const conf = state.activeLayers[layerKey];
+                const style = `stroke="${conf.stroke}" stroke-width="${conf.width}" fill="${conf.hatched ? `url(#hatch-diag-${layerKey})` : (conf.fillEnabled ? conf.fill : 'none')}" fill-opacity="${conf.fillEnabled ? (conf.hatched ? 1 : 0.2) : 0}"`;
+
+                groups[layerKey].push(`<path d="${path}" ${style} />`);
             });
 
             // Helper to get attrs
@@ -873,8 +955,11 @@ async function exportMap(isXtool = false) {
                 const c = state.activeLayers[k];
                 if (isXtool) {
                     // Standard Laser Colors for Autodetect
-                    // Red = Cut (not used here yet), Blue = Score, Black/Gray = Engrave
-                    const stroke = c.laserMode === 'score' ? '#0000FF' : '#000000';
+                    // Red = Cut, Blue = Score, Black/Gray = Engrave
+                    let stroke = '#000000'; // Default Engrave
+                    if (c.laserMode === 'score') stroke = '#0000FF'; // Blue
+                    if (c.laserMode === 'cut') stroke = '#FF0000'; // Red
+
                     const fill = c.laserMode === 'engrave' ? '#000000' : 'none';
                     return `stroke="${stroke}" stroke-width="${c.width}" fill="${fill}" xtool:mode="${c.laserMode}" xtool:power="${c.power}" xtool:speed="${c.speed}"`;
                 }
@@ -891,17 +976,48 @@ async function exportMap(isXtool = false) {
                     let content = '';
 
                     switch (conf.hatchStyle) {
+                        case 'lines-left':
+                            content = `<line x1="0" y1="${size}" x2="${size}" y2="0" stroke="${conf.fill}" stroke-width="0.5"/>`;
+                            break;
+                        case 'horizontal':
+                            content = `<line x1="0" y1="${size / 2}" x2="${size}" y2="${size / 2}" stroke="${conf.fill}" stroke-width="0.5"/>`;
+                            break;
+                        case 'vertical':
+                            content = `<line x1="${size / 2}" y1="0" x2="${size / 2}" y2="${size}" stroke="${conf.fill}" stroke-width="0.5"/>`;
+                            break;
                         case 'grid':
                             content = `<line x1="0" y1="0" x2="0" y2="${size}" stroke="${conf.fill}" stroke-width="0.5"/><line x1="0" y1="0" x2="${size}" y2="0" stroke="${conf.fill}" stroke-width="0.5"/>`;
                             break;
+                        case 'crosshatch':
+                            content = `<line x1="0" y1="0" x2="${size}" y2="${size}" stroke="${conf.fill}" stroke-width="0.5"/><line x1="0" y1="${size}" x2="${size}" y2="0" stroke="${conf.fill}" stroke-width="0.5"/>`;
+                            break;
                         case 'dots':
-                            content = `<circle cx="${size / 2}" cy="${size / 2}" r="${size / 4}" fill="${conf.fill}"/>`;
+                            content = `<circle cx="${size / 2}" cy="${size / 2}" r="${size / 6}" fill="${conf.fill}"/>`;
+                            break;
+                        case 'dots-large':
+                            content = `<circle cx="${size / 2}" cy="${size / 2}" r="${size / 3}" fill="${conf.fill}"/>`;
                             break;
                         case 'dashed':
                             content = `<line x1="0" y1="0" x2="0" y2="${size}" stroke="${conf.fill}" stroke-width="0.5" stroke-dasharray="${size / 2},${size / 2}"/>`;
                             break;
                         case 'zigzag':
                             content = `<path d="M 0 ${size} L ${size / 2} 0 L ${size} ${size}" fill="none" stroke="${conf.fill}" stroke-width="0.5"/>`;
+                            break;
+                        case 'waves':
+                            content = `<path d="M 0 ${size / 2} Q ${size / 4} 0, ${size / 2} ${size / 2} T ${size} ${size / 2}" fill="none" stroke="${conf.fill}" stroke-width="0.5"/>`;
+                            break;
+                        case 'hexagons':
+                            const h_exp = (Math.sqrt(3) / 2) * size;
+                            content = `<path d="M ${size / 4} 0 L ${size * 3 / 4} 0 L ${size} ${h_exp / 2} L ${size * 3 / 4} ${h_exp} L ${size / 4} ${h_exp} L 0 ${h_exp / 2} Z" fill="none" stroke="${conf.fill}" stroke-width="0.5"/>`;
+                            break;
+                        case 'bricks':
+                            content = `<line x1="0" y1="0" x2="${size}" y2="0" stroke="${conf.fill}" stroke-width="0.5"/><line x1="0" y1="${size / 2}" x2="${size}" y2="${size / 2}" stroke="${conf.fill}" stroke-width="0.5"/><line x1="0" y1="0" x2="0" y2="${size / 2}" stroke="${conf.fill}" stroke-width="0.5"/><line x1="${size / 2}" y1="${size / 2}" x2="${size / 2}" y2="${size}" stroke="${conf.fill}" stroke-width="0.5"/>`;
+                            break;
+                        case 'stars':
+                            content = `<path d="M ${size / 2} 0 L ${size / 2} ${size} M 0 ${size / 2} L ${size} ${size / 2} M ${size / 4} ${size / 4} L ${size * 3 / 4} ${size * 3 / 4} M ${size * 3 / 4} ${size / 4} L ${size / 4} ${size * 3 / 4}" fill="none" stroke="${conf.fill}" stroke-width="0.5"/>`;
+                            break;
+                        case 'squares':
+                            content = `<rect x="${size / 4}" y="${size / 4}" width="${size / 2}" height="${size / 2}" fill="none" stroke="${conf.fill}" stroke-width="0.5"/>`;
                             break;
                         case 'lines':
                         default:
@@ -929,7 +1045,13 @@ async function exportMap(isXtool = false) {
             }
 
             const isSplitExport = document.getElementById('export-split-check')?.checked;
+            const isOutlineChecked = document.getElementById('export-outline-check')?.checked;
             const filename = isXtool ? 'xtool-project.svg' : (isSplitExport ? 'vector-map' : 'vector-map.svg');
+
+            // Frame outline path
+            const framePath = `M 0 0 H ${widthMm} V ${heightMm} H 0 Z`;
+            const frameStyle = isXtool ? `stroke="#FF0000" stroke-width="0.2" fill="none" xtool:mode="cut" xtool:power="100" xtool:speed="10"` : `stroke="#FF0000" stroke-width="0.2" fill="none"`;
+            const frameSvg = isOutlineChecked ? `<g id="Frame_Outline">${isXtool ? `<path d="${framePath}" ${frameStyle} />` : `<rect x="0" y="0" width="${widthMm}" height="${heightMm}" rx="${radiusMm}" ry="${radiusMm}" ${frameStyle} />`}</g>` : '';
 
             if (isSplitExport && !isXtool) {
                 // Export multiple files
@@ -953,12 +1075,13 @@ async function exportMap(isXtool = false) {
                     await new Promise(r => setTimeout(r, 200)); // Delay between downloads
                 }
 
-                // Markers and Labels as another file
-                if (markerSvg || labelsSvg.length > 0) {
+                // Markers, Labels and Frame Outline as another file
+                if (markerSvg || labelsSvg.length > 0 || isOutlineChecked) {
                     const auxSvg = `
     <svg width="${widthMm}mm" height="${heightMm}mm" viewBox="0 0 ${widthMm} ${heightMm}" xmlns="http://www.w3.org/2000/svg">
         <g id="Labels">${labelsSvg.join('')}</g>
         <g id="Markers">${markerSvg}</g>
+        ${frameSvg}
     </svg>`;
                     downloadFile(auxSvg, 'map-annotations.svg', 'image/svg+xml');
                 }
@@ -985,7 +1108,7 @@ async function exportMap(isXtool = false) {
             <g id="Labels">${labelsSvg.join('')}</g>
             <g id="Markers">${markerSvg}</g>
         </g>
-         <rect x="0" y="0" width="${widthMm}" height="${heightMm}" rx="${radiusMm}" ry="${radiusMm}" fill="none" stroke="#000" stroke-width="0.2" />
+        ${frameSvg}
     </svg>`;
                 downloadFile(svgContent, filename, 'image/svg+xml');
             }
@@ -1183,7 +1306,13 @@ async function exportJpg() {
         if (conf.fillEnabled !== undefined) document.getElementById(`layer-${key}-fill-enabled`).checked = conf.fillEnabled;
         if (conf.hatched !== undefined) {
             const hb = document.getElementById(`layer-${key}-hatched`);
-            if (hb) hb.checked = conf.hatched;
+            if (hb) {
+                hb.checked = conf.hatched;
+                const hatchSettings = document.getElementById(`layer-${key}-hatch-settings`);
+                if (hatchSettings) {
+                    hatchSettings.classList.toggle('visible', conf.hatched);
+                }
+            }
         }
     });
 
@@ -1210,4 +1339,331 @@ async function exportJpg() {
             fetchAndRenderVectors();
         }
     }
+}
+
+/**
+ * Native .xcs Export for xTool Creative Space
+ * Generates a JSON project file compatible with xTool Studio.
+ */
+/**
+ * Helper to get layer key from feature properties
+ */
+const getLayerKey = (f) => {
+    const p = f.properties;
+    if (p.highway) return 'streets';
+    if (p.railway) return 'railways';
+    if (p.waterway || p.natural === 'water' || p.landuse === 'reservoir') return 'water';
+    if (p.building) return 'buildings';
+    if (p.leisure === 'park' || p.leisure === 'garden' || p.landuse === 'grass' || p.landuse === 'forest' || p.natural === 'wood' || p.natural === 'scrub' || p.landuse === 'orchard' || p.landuse === 'vineyard') return 'parks';
+    if (p.landuse === 'industrial' || p.landuse === 'commercial') return 'industrial';
+    if (p.amenity === 'parking') return 'parking';
+    return null;
+};
+
+/**
+ * Native .xcs Export for xTool Creative Space
+ * Generates a JSON project file compatible with xTool Studio.
+ */
+async function exportXCS(geoJsonData, bounds, widthMm, heightMm, isBitmapOnly = false) {
+    const canvasId = generateUUID();
+    const projectTraceID = generateUUID();
+
+    const layerData = {};
+    const displays = [];
+    const processingDataMap = {};
+    const canvasWidth = parseFloat(document.getElementById('map-width').value) || 200;
+    const canvasHeight = parseFloat(document.getElementById('map-height').value) || 200;
+
+    if (isBitmapOnly) {
+        // --- BITMAP ONLY EXPORT ---
+        const wrapper = document.getElementById('map-wrapper');
+        const canvas = await html2canvas(wrapper, {
+            useCORS: true,
+            scale: 2,
+            backgroundColor: state.settings.backgroundColor
+        });
+        const imgData = canvas.toDataURL('image/png');
+        const id = generateUUID();
+
+        displays.push({
+            id: id,
+            name: "Map Engraving",
+            type: "BITMAP",
+            x: 0,
+            y: 0,
+            angle: 0,
+            scale: { x: 1, y: 1 },
+            skew: { x: 0, y: 0 },
+            pivot: { x: 0, y: 0 },
+            offsetX: 0,
+            offsetY: 0,
+            lockRatio: true,
+            visible: true,
+            layerTag: "#000000",
+            layerColor: "#000000",
+            resourceOrigin: imgData,
+            width: canvasWidth,
+            height: canvasHeight,
+            isFill: true
+        });
+
+        processingDataMap[id] = {
+            isFill: true,
+            type: "BITMAP",
+            processingType: "BITMAP_ENGRAVING",
+            data: {
+                BITMAP_ENGRAVING: {
+                    materialType: "customize",
+                    planType: "official",
+                    parameter: {
+                        customize: { power: 60, speed: 100, repeat: 1, laser: "laser_10W", density: 100, bitmapScanMode: "zMode", bitmapMode: "grayscale", processHead: "LASER" }
+                    }
+                }
+            }
+        };
+
+        layerData["#000000"] = { name: "Engraving", order: 1, visible: true };
+
+    } else {
+        // --- VECTOR EXPORT ---
+        // Prepare Layer Metadata (Colors in XCS)
+        Object.keys(state.activeLayers).forEach((key, idx) => {
+            const conf = state.activeLayers[key];
+            if (!conf.visible) return;
+            const color = conf.stroke || "#000000";
+            layerData[color] = {
+                name: key.charAt(0).toUpperCase() + key.slice(1),
+                order: idx + 1,
+                visible: true
+            };
+        });
+
+        // Process Features into XCS Displays
+        geoJsonData.features.forEach(f => {
+            const key = getLayerKey(f);
+            if (!key || !state.activeLayers[key].visible) return;
+
+            const conf = state.activeLayers[key];
+            const id = generateUUID();
+            const dPath = geometryToPath(f.geometry, bounds, widthMm, heightMm);
+            if (!dPath) return;
+
+            // Create display object for the path
+            const display = {
+                id: id,
+                name: null,
+                type: "PATH",
+                x: 0,
+                y: 0,
+                angle: 0,
+                scale: { x: 1, y: 1 },
+                skew: { x: 0, y: 0 },
+                pivot: { x: 0, y: 0 },
+                localSkew: { x: 0, y: 0 },
+                offsetX: 0,
+                offsetY: 0,
+                lockRatio: true,
+                isClosePath: true,
+                zOrder: 0,
+                groupTag: "",
+                layerTag: conf.stroke,
+                layerColor: conf.stroke,
+                visible: true,
+                originColor: "#000000",
+                enableTransform: true,
+                visibleState: true,
+                lockState: false,
+                resourceOrigin: "",
+                customData: {},
+                rootComponentId: "",
+                minCanvasVersion: "0.0.0",
+                fill: { paintType: "color", visible: conf.fillEnabled && !conf.hatched, color: toXToolColor(conf.fill), alpha: 1 },
+                stroke: { paintType: "color", visible: true, color: toXToolColor(conf.stroke), alpha: 1, width: conf.width || 0.1, cap: "butt", join: "miter", miterLimit: 4, alignment: 0.5 },
+                width: widthMm,
+                height: heightMm,
+                isFill: conf.fillEnabled && !conf.hatched,
+                lineColor: toXToolColor(conf.stroke),
+                fillColor: conf.fill,
+                points: [],
+                dPath: dPath,
+                fillRule: "nonzero",
+                graphicX: 0,
+                graphicY: 0,
+                isCompoundPath: false
+            };
+
+            displays.push(display);
+
+            // Add to processing data map (Power/Speed settings)
+            const procType = conf.laserMode === 'cut' ? "VECTOR_CUTTING" : "VECTOR_ENGRAVING";
+            const isFillXCS = conf.laserMode === 'engrave';
+
+            processingDataMap[id] = {
+                isFill: isFillXCS,
+                type: "PATH",
+                processingType: procType,
+                data: {
+                    VECTOR_ENGRAVING: {
+                        materialType: "customize",
+                        planType: "official",
+                        parameter: {
+                            customize: { power: parseInt(conf.power), speed: parseInt(conf.speed), repeat: 1, laser: "laser_10W", density: 100, processHead: "LASER" }
+                        }
+                    },
+                    VECTOR_CUTTING: {
+                        materialType: "customize",
+                        planType: "official",
+                        parameter: {
+                            customize: { power: parseInt(conf.power), speed: parseInt(conf.speed), repeat: 1, laser: "laser_10W", processHead: "LASER" }
+                        }
+                    }
+                }
+            };
+        });
+
+        // Add Frame Outline to XCS
+        const isOutlineChecked = document.getElementById('export-outline-check')?.checked;
+        if (isOutlineChecked) {
+            const frameId = generateUUID();
+            const framePath = `M 0 0 H ${canvasWidth} V ${canvasHeight} H 0 Z`;
+
+            displays.push({
+                id: frameId,
+                name: "Frame Outline",
+                type: "PATH",
+                x: 0,
+                y: 0,
+                angle: 0,
+                scale: { x: 1, y: 1 },
+                skew: { x: 0, y: 0 },
+                pivot: { x: 0, y: 0 },
+                localSkew: { x: 0, y: 0 },
+                offsetX: 0,
+                offsetY: 0,
+                lockRatio: true,
+                isClosePath: true,
+                zOrder: 999, // On top
+                groupTag: "",
+                layerTag: "#FF0000",
+                layerColor: "#FF0000",
+                visible: true,
+                originColor: "#FF0000",
+                enableTransform: true,
+                visibleState: true,
+                lockState: false,
+                resourceOrigin: "",
+                customData: {},
+                rootComponentId: "",
+                minCanvasVersion: "0.0.0",
+                fill: { paintType: "none", visible: false, color: 0, alpha: 1 },
+                stroke: { paintType: "color", visible: true, color: 16711680, alpha: 1, width: 0.2, cap: "butt", join: "miter", miterLimit: 4, alignment: 0.5 },
+                width: canvasWidth,
+                height: canvasHeight,
+                isFill: false,
+                lineColor: 16711680,
+                fillColor: "#000000",
+                points: [],
+                dPath: framePath,
+                fillRule: "nonzero",
+                graphicX: 0,
+                graphicY: 0,
+                isCompoundPath: false
+            });
+
+            processingDataMap[frameId] = {
+                isFill: false,
+                type: "PATH",
+                processingType: "VECTOR_CUTTING",
+                data: {
+                    VECTOR_CUTTING: {
+                        materialType: "customize",
+                        planType: "official",
+                        parameter: {
+                            customize: { power: 100, speed: 10, repeat: 1, laser: "laser_10W", processHead: "LASER" }
+                        }
+                    }
+                }
+            };
+
+            layerData["#FF0000"] = { name: "Frame Outline (Cut)", order: 0, visible: true };
+        }
+    }
+
+    // Assemble final project structure
+    const xcsStructure = {
+        canvasId: canvasId,
+        canvas: [{
+            id: canvasId,
+            title: "MapGen Project",
+            layerData: layerData,
+            groupData: {},
+            displays: displays,
+            extendInfo: {
+                version: "2.15.17",
+                minCanvasVersion: "0.0.0",
+                displayProcessConfigMap: {},
+                rulerPluginData: { rulerGuide: [] },
+                gridOptions: { color: "normal", isShow: true }
+            }
+        }],
+        extId: "D1_Pro",
+        extName: "D1 Pro",
+        device: {
+            id: "D1_Pro",
+            power: 10,
+            data: {
+                dataType: "Map",
+                value: [
+                    [canvasId, {
+                        mode: "LASER_PLANE",
+                        data: {
+                            LASER_PLANE: {
+                                material: 1, focalLen: 5, isProcessByLayer: false, pathPlanning: "auto",
+                                thickness: 3, fanGear: 3, purifierGear: 4,
+                                precautionCodes: ["FLAMMABLE", "TURN_ON_AIR_PUMP"]
+                            }
+                        },
+                        displays: {
+                            dataType: "Map",
+                            value: Object.entries(processingDataMap)
+                        }
+                    }]
+                ]
+            }
+        },
+        minRequiredVersion: "2.6.0",
+        projectTraceID: projectTraceID
+    };
+
+    // Download Blob
+    const blob = new Blob([JSON.stringify(xcsStructure, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `MapGen_${new Date().getTime()}.xcs`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    // Reset button UI
+    const btn = document.getElementById('export-xtool-btn');
+    btn.disabled = false;
+    btn.innerText = "Open in xTool Studio";
+}
+
+function generateUUID() {
+    if (typeof crypto.randomUUID === 'function') {
+        return crypto.randomUUID();
+    }
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+        var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+    });
+}
+
+function toXToolColor(hex) {
+    if (!hex) return 0;
+    const cleanHex = hex.replace('#', '');
+    return parseInt(cleanHex, 16);
 }

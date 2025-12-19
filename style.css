@@ -97,6 +97,31 @@ body {
     color: var(--primary);
 }
 
+.title-wrap {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+}
+
+.version-badge {
+    display: flex;
+    flex-direction: column;
+    line-height: 1;
+}
+
+.v-num {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--primary);
+    letter-spacing: 0.05em;
+}
+
+.v-date {
+    font-size: 0.55rem;
+    color: var(--text-muted);
+    font-weight: 400;
+}
+
 .section {
     display: flex;
     flex-direction: column;
@@ -595,6 +620,106 @@ input:checked+.slider {
 
 input:checked+.slider:before {
     transform: translateX(16px);
+}
+
+/* Hatch Patterns Refined UI */
+.hatch-settings {
+    grid-column: 1 / -1;
+    margin-top: 4px;
+    padding: 12px;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    display: none;
+}
+
+.hatch-settings.visible {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.hatch-row {
+    display: grid;
+    grid-template-columns: 50px 1fr 40px;
+    align-items: center;
+    gap: 12px;
+}
+
+.hatch-row:first-child {
+    grid-template-columns: 1fr;
+}
+
+.hatch-row label {
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+}
+
+/* Range Slider Styling */
+input[type="range"] {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 2px;
+    outline: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px;
+    height: 14px;
+    background: var(--primary);
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+    transition: transform 0.1s ease;
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+}
+
+.hatch-val {
+    font-size: 0.7rem;
+    font-family: monospace;
+    color: var(--primary);
+    text-align: right;
+    font-weight: 600;
+}
+
+font-size: 0.7rem;
+min-width: 45px;
+color: var(--text-muted);
+margin: 0;
+}
+
+.hatch-row input[type="range"] {
+    flex: 1;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 2px;
+    cursor: pointer;
+}
+
+.hatch-val {
+    font-size: 0.7rem;
+    min-width: 35px;
+    text-align: right;
+    color: var(--primary);
+    font-variant-numeric: tabular-nums;
+}
+
+.hatch-style-select {
+    width: 100%;
+    background: var(--bg-input);
+    color: white;
+    border: 1px solid var(--border);
+    padding: 4px 8px;
+    font-size: 0.8rem;
+    border-radius: 4px;
 }
 
 /* Layer List */
