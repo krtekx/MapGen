@@ -14,6 +14,10 @@ L.Icon.Default.mergeOptions({
 });
 
 
+// Mapbox Configuration
+// Note: This is a public example token. For production, use your own from mapbox.com
+const MAPBOX_ACCESS_TOKEN = 'pk.eyJ1IjoiZXhhbXBsZXMiLCJhIjoiY2p1dHRybDR5MGJuZjQzcGhrZ2doeGgwNyJ9.a-vxW4UaxOoUMWUTGnEArw';
+
 // State
 const state = {
     mmToPx: 3.7795,
@@ -124,6 +128,30 @@ function setMapStyle(style) {
         case 'night':
             url = 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png';
             className = 'map-filter-night';
+            break;
+        case 'mapbox-streets':
+            url = `https://api.mapbox.com/styles/v1/mapbox/streets-v12/tiles/256/{z}/{x}/{y}@2x?access_token=${MAPBOX_ACCESS_TOKEN}`;
+            break;
+        case 'mapbox-outdoors':
+            url = `https://api.mapbox.com/styles/v1/mapbox/outdoors-v12/tiles/256/{z}/{x}/{y}@2x?access_token=${MAPBOX_ACCESS_TOKEN}`;
+            break;
+        case 'mapbox-light':
+            url = `https://api.mapbox.com/styles/v1/mapbox/light-v11/tiles/256/{z}/{x}/{y}@2x?access_token=${MAPBOX_ACCESS_TOKEN}`;
+            break;
+        case 'mapbox-dark':
+            url = `https://api.mapbox.com/styles/v1/mapbox/dark-v11/tiles/256/{z}/{x}/{y}@2x?access_token=${MAPBOX_ACCESS_TOKEN}`;
+            break;
+        case 'mapbox-satellite':
+            url = `https://api.mapbox.com/styles/v1/mapbox/satellite-v9/tiles/256/{z}/{x}/{y}@2x?access_token=${MAPBOX_ACCESS_TOKEN}`;
+            break;
+        case 'mapbox-satellite-streets':
+            url = `https://api.mapbox.com/styles/v1/mapbox/satellite-streets-v12/tiles/256/{z}/{x}/{y}@2x?access_token=${MAPBOX_ACCESS_TOKEN}`;
+            break;
+        case 'mapbox-navigation-day':
+            url = `https://api.mapbox.com/styles/v1/mapbox/navigation-day-v1/tiles/256/{z}/{x}/{y}@2x?access_token=${MAPBOX_ACCESS_TOKEN}`;
+            break;
+        case 'mapbox-navigation-night':
+            url = `https://api.mapbox.com/styles/v1/mapbox/navigation-night-v1/tiles/256/{z}/{x}/{y}@2x?access_token=${MAPBOX_ACCESS_TOKEN}`;
             break;
         case 'standard':
         default:
@@ -672,6 +700,12 @@ function renderVectorLayers() {
     if (!state.vectorData) return;
     clearVectorLayers();
 
+    // World Scale Calculation
+    // Baseline zoom is 15.
+    // If zoom > 15 (zoomed in), scale > 1. Elements appear larger (occupy more pixels).
+    const currentZoom = state.map.getZoom();
+    const zoomScale = Math.pow(2, currentZoom - 15);
+
     // Update dynamic patterns
     const defs = document.querySelector('defs');
     Object.keys(state.activeLayers).forEach(key => {
@@ -685,7 +719,10 @@ function renderVectorLayers() {
             pattern.setAttribute('id', patternId);
             pattern.setAttribute('patternUnits', 'userSpaceOnUse');
 
-            const size = 10 * (conf.hatchScale || 1);
+            // Scale pattern size by zoomScale
+            const baseSize = 10 * (conf.hatchScale || 1);
+            const size = baseSize * zoomScale;
+
             pattern.setAttribute('width', size);
             pattern.setAttribute('height', size);
             pattern.setAttribute('patternTransform', `rotate(${conf.hatchRotation || 0})`);
@@ -695,7 +732,10 @@ function renderVectorLayers() {
                 l.setAttribute('x1', x1); l.setAttribute('y1', y1);
                 l.setAttribute('x2', x2); l.setAttribute('y2', y2);
                 l.setAttribute('stroke', conf.fill);
-                l.setAttribute('stroke-width', '1');
+                // Also scale the pattern stroke width slightly, or keep it 1?
+                // Visual consistency usually requires scaling it too, otherwise it looks too thin.
+                // Let's scale it but clamp it so it doesn't get absurdly thick.
+                l.setAttribute('stroke-width', (1 * zoomScale).toFixed(2));
                 if (dash) l.setAttribute('stroke-dasharray', dash);
                 return l;
             };
@@ -721,13 +761,15 @@ function renderVectorLayers() {
                 case 'dots':
                     const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
                     circle.setAttribute('cx', size / 2); circle.setAttribute('cy', size / 2);
-                    circle.setAttribute('r', size / 6); circle.setAttribute('fill', conf.fill);
+                    circle.setAttribute('r', (size / 6)); // Radius scales with size
+                    circle.setAttribute('fill', conf.fill);
                     pattern.appendChild(circle);
                     break;
                 case 'dots-large':
                     const circleL = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
                     circleL.setAttribute('cx', size / 2); circleL.setAttribute('cy', size / 2);
-                    circleL.setAttribute('r', size / 3); circleL.setAttribute('fill', conf.fill);
+                    circleL.setAttribute('r', (size / 3));
+                    circleL.setAttribute('fill', conf.fill);
                     pattern.appendChild(circleL);
                     break;
                 case 'dashed':
@@ -737,14 +779,14 @@ function renderVectorLayers() {
                     const pZig = document.createElementNS('http://www.w3.org/2000/svg', 'path');
                     pZig.setAttribute('d', `M 0 ${size} L ${size / 2} 0 L ${size} ${size}`);
                     pZig.setAttribute('fill', 'none'); pZig.setAttribute('stroke', conf.fill);
-                    pZig.setAttribute('stroke-width', '1');
+                    pZig.setAttribute('stroke-width', (1 * zoomScale).toFixed(2));
                     pattern.appendChild(pZig);
                     break;
                 case 'waves':
                     const pWave = document.createElementNS('http://www.w3.org/2000/svg', 'path');
                     pWave.setAttribute('d', `M 0 ${size / 2} Q ${size / 4} 0, ${size / 2} ${size / 2} T ${size} ${size / 2}`);
                     pWave.setAttribute('fill', 'none'); pWave.setAttribute('stroke', conf.fill);
-                    pWave.setAttribute('stroke-width', '1');
+                    pWave.setAttribute('stroke-width', (1 * zoomScale).toFixed(2));
                     pattern.appendChild(pWave);
                     break;
                 case 'hexagons':
@@ -752,7 +794,7 @@ function renderVectorLayers() {
                     const h = (Math.sqrt(3) / 2) * size;
                     pHex.setAttribute('d', `M ${size / 4} 0 L ${size * 3 / 4} 0 L ${size} ${h / 2} L ${size * 3 / 4} h L ${size / 4} h L 0 ${h / 2} Z`);
                     pHex.setAttribute('fill', 'none'); pHex.setAttribute('stroke', conf.fill);
-                    pHex.setAttribute('stroke-width', '1');
+                    pHex.setAttribute('stroke-width', (1 * zoomScale).toFixed(2));
                     pattern.appendChild(pHex);
                     pattern.setAttribute('height', h);
                     break;
@@ -766,7 +808,7 @@ function renderVectorLayers() {
                     const pStar = document.createElementNS('http://www.w3.org/2000/svg', 'path');
                     pStar.setAttribute('d', `M ${size / 2} 0 L ${size / 2} ${size} M 0 ${size / 2} L ${size} ${size / 2} M ${size / 4} ${size / 4} L ${size * 3 / 4} ${size * 3 / 4} M ${size * 3 / 4} ${size / 4} L ${size / 4} ${size * 3 / 4}`);
                     pStar.setAttribute('fill', 'none'); pStar.setAttribute('stroke', conf.fill);
-                    pStar.setAttribute('stroke-width', '1');
+                    pStar.setAttribute('stroke-width', (1 * zoomScale).toFixed(2));
                     pattern.appendChild(pStar);
                     break;
                 case 'squares':
@@ -774,7 +816,7 @@ function renderVectorLayers() {
                     rect.setAttribute('x', size / 4); rect.setAttribute('y', size / 4);
                     rect.setAttribute('width', size / 2); rect.setAttribute('height', size / 2);
                     rect.setAttribute('fill', 'none'); rect.setAttribute('stroke', conf.fill);
-                    rect.setAttribute('stroke-width', '1');
+                    rect.setAttribute('stroke-width', (1 * zoomScale).toFixed(2));
                     pattern.appendChild(rect);
                     break;
                 case 'lines':
@@ -790,7 +832,8 @@ function renderVectorLayers() {
         const conf = state.activeLayers[key];
         return {
             color: conf.stroke,
-            weight: conf.width,
+            // Scale stroke weight by zoomScale for 'Absolute' thickness
+            weight: conf.width * zoomScale,
             opacity: 1,
             fill: true,
             fillColor: conf.hatched ? `url(#hatch-diag-${key})` : conf.fill,
@@ -798,7 +841,7 @@ function renderVectorLayers() {
         };
     };
 
-    // Filter features into groups
+    // Filter features into groups and add to map
     state.vectorLayers.streets = L.geoJSON(state.vectorData, {
         filter: feature => !!feature.properties.highway,
         style: getStyle('streets'),
