@@ -24,13 +24,13 @@ const state = {
     vectorData: null, // Stores GeoJSON
     vectorLayers: {}, // Stores Leaflet Layer references
     activeLayers: {
-        buildings: { visible: true, stroke: '#64748b', width: 1, fill: '#64748b', fillEnabled: true, hatched: false },
-        water: { visible: true, stroke: '#3b82f6', width: 1, fill: '#3b82f6', fillEnabled: true, hatched: false },
-        streets: { visible: true, stroke: '#333333', width: 1, fill: '#ffffff', fillEnabled: false, hatched: false, labelsEnabled: false },
-        parks: { visible: true, stroke: '#22c55e', width: 0, fill: '#22c55e', fillEnabled: true, hatched: false },
-        railways: { visible: true, stroke: '#475569', width: 1.5, fill: '#000000', fillEnabled: false, hatched: false },
-        industrial: { visible: false, stroke: '#94a3b8', width: 0.5, fill: '#cbd5e1', fillEnabled: false, hatched: false },
-        parking: { visible: false, stroke: '#94a3b8', width: 0.5, fill: '#e2e8f0', fillEnabled: false, hatched: false }
+        streets: { visible: true, stroke: '#333333', width: 1, fill: '#ffffff', fillEnabled: false, hatched: false, labelsEnabled: false, laserMode: 'score', power: 20, speed: 100 },
+        water: { visible: true, stroke: '#3b82f6', width: 1, fill: '#3b82f6', fillEnabled: true, hatched: false, laserMode: 'engrave', power: 15, speed: 150 },
+        buildings: { visible: true, stroke: '#64748b', width: 1, fill: '#64748b', fillEnabled: true, hatched: false, laserMode: 'engrave', power: 10, speed: 200 },
+        parks: { visible: true, stroke: '#22c55e', width: 0, fill: '#22c55e', fillEnabled: true, hatched: false, laserMode: 'engrave', power: 10, speed: 200 },
+        railways: { visible: true, stroke: '#475569', width: 1.5, fill: '#000000', fillEnabled: false, hatched: false, laserMode: 'score', power: 30, speed: 80 },
+        industrial: { visible: false, stroke: '#94a3b8', width: 0.5, fill: '#cbd5e1', fillEnabled: false, hatched: false, laserMode: 'engrave', power: 10, speed: 200 },
+        parking: { visible: false, stroke: '#94a3b8', width: 0.5, fill: '#e2e8f0', fillEnabled: false, hatched: false, laserMode: 'engrave', power: 10, speed: 200 }
     },
     settings: {
         fontFamily: "'Outfit', sans-serif",
@@ -75,7 +75,16 @@ function setMapStyle(style) {
     let className = '';
 
     // Reset filters
-    mapDiv.classList.remove('map-filter-grey', 'map-filter-line', 'map-filter-vintage', 'map-filter-blueprint');
+    mapDiv.classList.remove(
+        'map-filter-grey',
+        'map-filter-line',
+        'map-filter-vintage',
+        'map-filter-blueprint',
+        'map-filter-neon',
+        'map-filter-mono',
+        'map-filter-inverted',
+        'map-filter-night'
+    );
 
     switch (style) {
         case 'light':
@@ -98,6 +107,22 @@ function setMapStyle(style) {
         case 'line':
             url = 'https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png';
             className = 'map-filter-line';
+            break;
+        case 'neon':
+            url = 'https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png';
+            className = 'map-filter-neon';
+            break;
+        case 'mono':
+            url = 'https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png';
+            className = 'map-filter-mono';
+            break;
+        case 'inverted':
+            url = 'https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png';
+            className = 'map-filter-inverted';
+            break;
+        case 'night':
+            url = 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png';
+            className = 'map-filter-night';
             break;
         case 'standard':
         default:
@@ -256,6 +281,17 @@ function setupControls() {
             state.activeLayers[layer].hatched = e.target.checked;
             updateStyle();
         });
+
+        // Laser Settings
+        ['laser-mode', 'power', 'speed'].forEach(prop => {
+            const el = document.getElementById(`layer-${layer}-${prop}`);
+            if (el) {
+                el.addEventListener('input', (e) => {
+                    const camelProp = prop.replace(/-([a-z])/g, (g) => g[1].toUpperCase());
+                    state.activeLayers[layer][camelProp] = e.target.value;
+                });
+            }
+        });
     });
 
     // Street Labels Toggle
@@ -273,6 +309,7 @@ function setupControls() {
 
     // Export
     document.getElementById('export-btn').addEventListener('click', exportMap);
+    document.getElementById('export-xtool-btn').addEventListener('click', () => exportMap(true));
     document.getElementById('export-jpg-btn').addEventListener('click', exportJpg);
 
     // Markers
@@ -721,20 +758,23 @@ function geometryToPath(geometry, bounds, width, height) {
     return '';
 }
 
-async function exportMap() {
-    const btn = document.getElementById('export-btn');
+async function exportMap(isXtool = false) {
+    const btn = isXtool ? document.getElementById('export-xtool-btn') : document.getElementById('export-btn');
     const originalText = btn.innerText;
 
     try {
         if (!state.map) throw new Error("Map not initialized");
         btn.disabled = true;
-        btn.innerText = "Generating SVG...";
+        btn.innerText = isXtool ? "Optimizing for xTool..." : "Generating SVG...";
 
-        // If not in vector mode, try to fetch data now?
-        // User asked for "possibility to turn on and off".
-        // If they hit Export without previewing, we should probably fetch everything.
-        // But for better UX, let's assume they use the toggle.
-        // If not, we trigger the fetch logic internally.
+        // Force vector mode if exporting for xTool
+        if (isXtool && !state.vectorMode) {
+            state.vectorMode = true;
+            document.getElementById('vector-mode-toggle').checked = true;
+            updateUIState();
+            // Wait for vectors to load
+            await new Promise(r => setTimeout(r, 2000));
+        }
 
         const widthMm = parseFloat(document.getElementById('map-width').value) || 200;
         const heightMm = parseFloat(document.getElementById('map-height').value) || 200;
@@ -784,6 +824,13 @@ async function exportMap() {
             // Helper to get attrs
             const getAttrs = (k) => {
                 const c = state.activeLayers[k];
+                if (isXtool) {
+                    // Standard Laser Colors for Autodetect
+                    // Red = Cut (not used here yet), Blue = Score, Black/Gray = Engrave
+                    const stroke = c.laserMode === 'score' ? '#0000FF' : '#000000';
+                    const fill = c.laserMode === 'engrave' ? '#000000' : 'none';
+                    return `stroke="${stroke}" stroke-width="${c.width}" fill="${fill}" xtool:mode="${c.laserMode}" xtool:power="${c.power}" xtool:speed="${c.speed}"`;
+                }
                 const fill = c.hatched ? `url(#hatch-diag-${k})` : (c.fillEnabled ? c.fill : 'none');
                 return `stroke="${c.stroke}" stroke-width="${c.width}" fill="${fill}" fill-opacity="${c.fillEnabled ? (c.hatched ? 1 : 0.2) : 0}"`;
             };
@@ -813,7 +860,16 @@ async function exportMap() {
                 });
             }
 
-            const svgContent = `
+            const isSplitExport = document.getElementById('export-split-check')?.checked;
+            const filename = isXtool ? 'xtool-project.svg' : (isSplitExport ? 'vector-map' : 'vector-map.svg');
+
+            if (isSplitExport && !isXtool) {
+                // Export multiple files
+                const layerKeys = Object.keys(groups);
+                for (const key of layerKeys) {
+                    if (groups[key].length === 0) continue;
+
+                    const layerSvg = `
     <svg width="${widthMm}mm" height="${heightMm}mm" viewBox="0 0 ${widthMm} ${heightMm}" xmlns="http://www.w3.org/2000/svg">
         <defs>
             <clipPath id="mapClip">
@@ -821,7 +877,35 @@ async function exportMap() {
             </clipPath>
             ${patternsSvg}
         </defs>
-        <rect x="0" y="0" width="${widthMm}" height="${heightMm}" rx="${radiusMm}" ry="${radiusMm}" fill="${state.settings.backgroundColor}" />
+        <g clip-path="url(#mapClip)">
+            <g id="${key}" ${getAttrs(key)}>${groups[key].join('')}</g>
+        </g>
+    </svg>`;
+                    downloadFile(layerSvg, `map-${key}.svg`, 'image/svg+xml');
+                    await new Promise(r => setTimeout(r, 200)); // Delay between downloads
+                }
+
+                // Markers and Labels as another file
+                if (markerSvg || labelsSvg.length > 0) {
+                    const auxSvg = `
+    <svg width="${widthMm}mm" height="${heightMm}mm" viewBox="0 0 ${widthMm} ${heightMm}" xmlns="http://www.w3.org/2000/svg">
+        <g id="Labels">${labelsSvg.join('')}</g>
+        <g id="Markers">${markerSvg}</g>
+    </svg>`;
+                    downloadFile(auxSvg, 'map-annotations.svg', 'image/svg+xml');
+                }
+            } else {
+                // original single file export
+                const laserNs = isXtool ? 'xmlns:xtool="http://www.xtool.com/xtool"' : '';
+                const svgContent = `
+    <svg width="${widthMm}mm" height="${heightMm}mm" viewBox="0 0 ${widthMm} ${heightMm}" xmlns="http://www.w3.org/2000/svg" ${laserNs}>
+        <defs>
+            <clipPath id="mapClip">
+                <rect x="0" y="0" width="${widthMm}" height="${heightMm}" rx="${radiusMm}" ry="${radiusMm}" />
+            </clipPath>
+            ${patternsSvg}
+        </defs>
+        ${isXtool ? '' : `<rect x="0" y="0" width="${widthMm}" height="${heightMm}" rx="${radiusMm}" ry="${radiusMm}" fill="${state.settings.backgroundColor}" />`}
         <g clip-path="url(#mapClip)">
             <g id="Industrial" ${getAttrs('industrial')}>${groups.industrial.join('')}</g>
             <g id="Parking" ${getAttrs('parking')}>${groups.parking.join('')}</g>
@@ -835,7 +919,8 @@ async function exportMap() {
         </g>
          <rect x="0" y="0" width="${widthMm}" height="${heightMm}" rx="${radiusMm}" ry="${radiusMm}" fill="none" stroke="#000" stroke-width="0.2" />
     </svg>`;
-            downloadFile(svgContent, 'vector-map.svg', 'image/svg+xml');
+                downloadFile(svgContent, filename, 'image/svg+xml');
+            }
 
         } else {
             // --- BITMAP EXPORT (Raster) ---

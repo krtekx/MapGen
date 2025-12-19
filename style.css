@@ -332,7 +332,22 @@ button {
 .map-filter-line {
     /* High contrast black and white sketch */
     filter: grayscale(100%) contrast(400%) brightness(1.1);
-    /* Note: Invert(1) was making it all black because it inverted a mostly light map */
+}
+
+.map-filter-neon {
+    filter: invert(1) hue-rotate(180deg) saturate(3) contrast(1.2) brightness(0.9);
+}
+
+.map-filter-mono {
+    filter: grayscale(100%) contrast(1.5) brightness(1.1);
+}
+
+.map-filter-inverted {
+    filter: invert(1);
+}
+
+.map-filter-night {
+    filter: brightness(0.7) contrast(1.4) saturate(0.5) hue-rotate(20deg);
 }
 
 /* Marker List Styles */
@@ -661,6 +676,25 @@ input:checked+.slider:before {
     display: flex;
     align-items: center;
     gap: 0.3rem;
+}
+
+select.laser-mode {
+    padding: 2px 4px;
+    font-size: 0.75rem;
+    height: 32px;
+    background: rgba(45, 212, 191, 0.1);
+    border-color: rgba(45, 212, 191, 0.3);
+}
+
+input.w-num[title="Power"],
+input.w-num[title="Speed"] {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: var(--border);
+}
+
+input.w-num::placeholder {
+    color: var(--text-muted);
+    font-size: 0.6rem;
 }
 
 input[type=color] {

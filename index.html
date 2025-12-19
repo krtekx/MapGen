@@ -48,9 +48,13 @@
                         <option value="light">Arctic (Light)</option>
                         <option value="vintage">Vintage / Sepia</option>
                         <option value="blueprint">Blueprint / Technical</option>
+                        <option value="neon">Neon / Cyberpunk</option>
                         <option value="satellite">Satellite Imagery</option>
                         <option value="topo">Topographic (Terrain)</option>
                         <option value="line">Line Art / Sketch</option>
+                        <option value="mono">Monochrome High-Contrast</option>
+                        <option value="night">Night Drive (Voyager)</option>
+                        <option value="inverted">X-Ray (Inverted)</option>
                     </select>
                 </div>
             </div>
@@ -92,12 +96,16 @@
                                 </div>
                             </div>
                             <div class="control-group">
-                                <label>Fill</label>
+                                <label>Laser Settings</label>
                                 <div class="row-inputs">
-                                    <input type="color" id="layer-buildings-fill" value="#64748b">
-                                    <input type="checkbox" id="layer-buildings-fill-enabled" checked
-                                        title="Enable Fill">
-                                    <input type="checkbox" id="layer-buildings-hatched" title="Hatched Fil">
+                                    <select id="layer-buildings-laser-mode" class="laser-mode">
+                                        <option value="engrave" selected>Engrave</option>
+                                        <option value="score">Score</option>
+                                    </select>
+                                    <input type="number" id="layer-buildings-power" value="10" placeholder="P"
+                                        class="w-num" title="Power">
+                                    <input type="number" id="layer-buildings-speed" value="200" placeholder="S"
+                                        class="w-num" title="Speed">
                                 </div>
                             </div>
                         </div>
@@ -119,11 +127,16 @@
                                 </div>
                             </div>
                             <div class="control-group">
-                                <label>Fill</label>
+                                <label>Laser Settings</label>
                                 <div class="row-inputs">
-                                    <input type="color" id="layer-water-fill" value="#3b82f6">
-                                    <input type="checkbox" id="layer-water-fill-enabled" checked title="Enable Fill">
-                                    <input type="checkbox" id="layer-water-hatched" title="Hatched Fill">
+                                    <select id="layer-water-laser-mode" class="laser-mode">
+                                        <option value="engrave" selected>Engrave</option>
+                                        <option value="score">Score</option>
+                                    </select>
+                                    <input type="number" id="layer-water-power" value="15" placeholder="P" class="w-num"
+                                        title="Power">
+                                    <input type="number" id="layer-water-speed" value="150" placeholder="S"
+                                        class="w-num" title="Speed">
                                 </div>
                             </div>
                         </div>
@@ -145,11 +158,16 @@
                                 </div>
                             </div>
                             <div class="control-group">
-                                <label>Fill</label>
+                                <label>Laser Settings</label>
                                 <div class="row-inputs">
-                                    <input type="color" id="layer-streets-fill" value="#ffffff">
-                                    <input type="checkbox" id="layer-streets-fill-enabled" title="Enable Fill">
-                                    <input type="checkbox" id="layer-streets-hatched" title="Hatched Fill">
+                                    <select id="layer-streets-laser-mode" class="laser-mode">
+                                        <option value="engrave">Engrave</option>
+                                        <option value="score" selected>Score</option>
+                                    </select>
+                                    <input type="number" id="layer-streets-power" value="20" placeholder="P"
+                                        class="w-num" title="Power">
+                                    <input type="number" id="layer-streets-speed" value="100" placeholder="S"
+                                        class="w-num" title="Speed">
                                 </div>
                             </div>
                         </div>
@@ -178,11 +196,16 @@
                                 </div>
                             </div>
                             <div class="control-group">
-                                <label>Fill</label>
+                                <label>Laser Settings</label>
                                 <div class="row-inputs">
-                                    <input type="color" id="layer-parks-fill" value="#22c55e">
-                                    <input type="checkbox" id="layer-parks-fill-enabled" checked title="Enable Fill">
-                                    <input type="checkbox" id="layer-parks-hatched" title="Hatched Fill">
+                                    <select id="layer-parks-laser-mode" class="laser-mode">
+                                        <option value="engrave" selected>Engrave</option>
+                                        <option value="score">Score</option>
+                                    </select>
+                                    <input type="number" id="layer-parks-power" value="10" placeholder="P" class="w-num"
+                                        title="Power">
+                                    <input type="number" id="layer-parks-speed" value="200" placeholder="S"
+                                        class="w-num" title="Speed">
                                 </div>
                             </div>
                         </div>
@@ -203,11 +226,17 @@
                                         class="w-num">
                                 </div>
                             </div>
-                            <div class="control-group" style="opacity: 0.5; pointer-events: none;">
-                                <label>Fill</label>
+                            <div class="control-group">
+                                <label>Laser Settings</label>
                                 <div class="row-inputs">
-                                    <input type="color" id="layer-railways-fill" value="#000000">
-                                    <input type="checkbox" id="layer-railways-fill-enabled">
+                                    <select id="layer-railways-laser-mode" class="laser-mode">
+                                        <option value="engrave">Engrave</option>
+                                        <option value="score" selected>Score</option>
+                                    </select>
+                                    <input type="number" id="layer-railways-power" value="30" placeholder="P"
+                                        class="w-num" title="Power">
+                                    <input type="number" id="layer-railways-speed" value="80" placeholder="S"
+                                        class="w-num" title="Speed">
                                 </div>
                             </div>
                         </div>
@@ -229,11 +258,16 @@
                                 </div>
                             </div>
                             <div class="control-group">
-                                <label>Fill</label>
+                                <label>Laser Settings</label>
                                 <div class="row-inputs">
-                                    <input type="color" id="layer-industrial-fill" value="#cbd5e1">
-                                    <input type="checkbox" id="layer-industrial-fill-enabled" title="Enable Fill">
-                                    <input type="checkbox" id="layer-industrial-hatched" title="Hatched Fill">
+                                    <select id="layer-industrial-laser-mode" class="laser-mode">
+                                        <option value="engrave" selected>Engrave</option>
+                                        <option value="score">Score</option>
+                                    </select>
+                                    <input type="number" id="layer-industrial-power" value="10" placeholder="P"
+                                        class="w-num" title="Power">
+                                    <input type="number" id="layer-industrial-speed" value="200" placeholder="S"
+                                        class="w-num" title="Speed">
                                 </div>
                             </div>
                         </div>
@@ -255,11 +289,16 @@
                                 </div>
                             </div>
                             <div class="control-group">
-                                <label>Fill</label>
+                                <label>Laser Settings</label>
                                 <div class="row-inputs">
-                                    <input type="color" id="layer-parking-fill" value="#e2e8f0">
-                                    <input type="checkbox" id="layer-parking-fill-enabled" title="Enable Fill">
-                                    <input type="checkbox" id="layer-parking-hatched" title="Hatched Fil">
+                                    <select id="layer-parking-laser-mode" class="laser-mode">
+                                        <option value="engrave" selected>Engrave</option>
+                                        <option value="score">Score</option>
+                                    </select>
+                                    <input type="number" id="layer-parking-power" value="10" placeholder="P"
+                                        class="w-num" title="Power">
+                                    <input type="number" id="layer-parking-speed" value="200" placeholder="S"
+                                        class="w-num" title="Speed">
                                 </div>
                             </div>
                         </div>
@@ -346,8 +385,25 @@
             </div>
 
             <div class="section export-section">
-                <button id="export-btn" class="btn primary">Export Bitmap (SVG)</button>
-                <button id="export-jpg-btn" class="btn secondary">Export JPG (Engrave)</button>
+                <div class="row-center" style="margin-bottom: 10px;">
+                    <input type="checkbox" id="export-split-check" style="width: auto; margin-right: 8px;">
+                    <label for="export-split-check" class="inline" style="font-size: 0.8rem;">Export Layers Separately
+                        (xTool)</label>
+                </div>
+                <button id="export-btn" class="btn primary">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        style="margin-right:8px; vertical-align:middle">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    Export Laser (SVG)
+                </button>
+                <button id="export-xtool-btn" class="btn secondary"
+                    style="background: #2dd4bf; border: none; color: #111; font-weight: 800;">
+                    Open in xTool Studio
+                </button>
+                <button id="export-jpg-btn" class="btn secondary">Export JPG (Engrave Preview)</button>
             </div>
         </aside>
 
