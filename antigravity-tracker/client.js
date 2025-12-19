@@ -4,6 +4,11 @@
  */
 
 (function () {
+    // Prevent multiple instances (HMR)
+    if (window.__antigravityInterval) clearInterval(window.__antigravityInterval);
+    const existingPanel = document.querySelector('.antigravity-debug-panel');
+    if (existingPanel) existingPanel.remove();
+
     // Styles
     const style = document.createElement('style');
     style.textContent = `
@@ -54,7 +59,8 @@
     async function fetchData() {
         try {
             // Add timestamp to prevent caching
-            const response = await fetch('/public/production.json?t=' + Date.now());
+            // Fix: fetching directly from root, not /public/
+            const response = await fetch('/production.json?t=' + Date.now());
             if (response.ok) {
                 productionData = await response.json();
                 updateDisplay();
@@ -68,7 +74,7 @@
     fetchData();
 
     // Poll every 10 seconds
-    setInterval(fetchData, 10000);
+    window.__antigravityInterval = setInterval(fetchData, 10000);
 
     console.log('🚀 Antigravity Debug Panel Loaded');
 })();

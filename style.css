@@ -8,7 +8,9 @@
     --text-muted: #94a3b8;
     --border: rgba(255, 255, 255, 0.1);
     --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-    --backdrop: 12px;
+    --backdrop: 16px;
+    --bg-panel: rgba(15, 23, 42, 0.85);
+    --primary-glow: rgba(59, 130, 246, 0.4);
 }
 
 * {
@@ -43,9 +45,9 @@ body {
     background: var(--bg-panel);
     backdrop-filter: blur(var(--backdrop));
     -webkit-backdrop-filter: blur(var(--backdrop));
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 1.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 20px;
+    padding: 1.25rem;
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
@@ -55,6 +57,15 @@ body {
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     max-height: calc(100vh - 4rem);
     overflow-y: auto;
+    scrollbar-width: none;
+    /* Firefox */
+    -ms-overflow-style: none;
+    /* IE and Edge */
+}
+
+.control-panel::-webkit-scrollbar {
+    display: none;
+    /* Chrome, Safari and Opera */
 }
 
 .control-panel.collapsed {
@@ -145,13 +156,13 @@ body {
 
 input,
 select {
-    background: rgba(0, 0, 0, 0.3);
+    background: rgba(0, 0, 0, 0.4);
     border: 1px solid var(--border);
     border-radius: 8px;
-    padding: 0.6rem 0.8rem;
+    padding: 0.5rem 0.7rem;
     color: white;
     font-family: inherit;
-    font-size: 1rem;
+    font-size: 0.9rem;
     width: 100%;
     transition: 0.2s;
 }
@@ -173,19 +184,31 @@ input[type=range] {
 
 input[type=range]::-webkit-slider-runnable-track {
     width: 100%;
-    height: 6px;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 3px;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 2px;
+    transition: background 0.3s ease;
+}
+
+input[type=range]:hover::-webkit-slider-runnable-track {
+    background: rgba(255, 255, 255, 0.15);
 }
 
 input[type=range]::-webkit-slider-thumb {
-    height: 16px;
-    width: 16px;
+    height: 14px;
+    width: 14px;
     border-radius: 50%;
     background: var(--primary);
     margin-top: -5px;
     -webkit-appearance: none;
     cursor: pointer;
+    box-shadow: 0 0 8px var(--primary-glow);
+    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.2s ease;
+}
+
+input[type=range]::-webkit-slider-thumb:hover {
+    transform: scale(1.25);
+    box-shadow: 0 0 15px var(--primary);
 }
 
 /* Checkbox */
@@ -280,7 +303,12 @@ button {
 
 .btn.primary:hover {
     background: var(--primary-hover);
-    transform: translateY(-1px);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px var(--primary-glow);
+}
+
+.btn.primary:active {
+    transform: translateY(0);
 }
 
 .btn.secondary {
@@ -299,8 +327,9 @@ button {
 }
 
 .btn.secondary:hover {
-    background: rgba(255, 255, 255, 0.05);
-    border-color: var(--text-muted);
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.3);
+    transform: translateY(-1px);
 }
 
 /* Viewport */
@@ -378,11 +407,16 @@ button {
 /* Marker List Styles */
 .marker-list {
     margin-top: 15px;
-    max-height: 250px;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
     gap: 8px;
+    scrollbar-width: none;
+    /* Firefox */
+    -ms-overflow-style: none;
+    /* IE and Edge */
+}
+
+.marker-list::-webkit-scrollbar {
+    display: none;
+    /* Chrome, Safari and Opera */
 }
 
 .marker-card {
@@ -599,12 +633,17 @@ button {
 }
 
 .layer-header {
-    padding: 12px 16px;
+    padding: 10px 14px;
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
     cursor: pointer;
     background: rgba(255, 255, 255, 0.02);
+    transition: background 0.2s ease;
+}
+
+.layer-header:hover {
+    background: rgba(255, 255, 255, 0.04);
 }
 
 .layer-header label {
@@ -623,18 +662,24 @@ button {
 }
 
 .control-group {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+}
+
+.control-group.row-style {
     display: grid;
     grid-template-columns: 90px 1fr;
     align-items: center;
-    gap: 12px;
 }
 
 .control-group label {
-    font-size: 0.72rem;
+    font-size: 0.68rem;
     font-weight: 700;
     color: var(--text-muted);
     text-transform: uppercase;
-    letter-spacing: 0.03em;
+    letter-spacing: 0.05em;
 }
 
 .row-inputs {
@@ -707,10 +752,16 @@ input:checked+.slider:before {
 }
 
 .hatch-row {
-    display: grid;
-    grid-template-columns: 50px 1fr 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 4px;
+}
+
+.hatch-row-header {
+    display: flex;
+    justify-content: space-between;
     align-items: center;
-    gap: 12px;
 }
 
 .hatch-row:first-child {
@@ -752,23 +803,30 @@ input[type="range"]::-webkit-slider-thumb:hover {
 }
 
 .hatch-val {
-    font-size: 0.7rem;
-    font-family: monospace;
+    font-size: 0.65rem;
+    font-family: 'Source Code Pro', monospace;
     color: var(--primary);
-    text-align: right;
     font-weight: 600;
-    min-width: 40px;
     font-variant-numeric: tabular-nums;
+    background: rgba(59, 130, 246, 0.1);
+    padding: 2px 6px;
+    border-radius: 4px;
 }
 
 .hatch-style-select {
     width: 100%;
-    background: var(--bg-input);
+    background: rgba(0, 0, 0, 0.4);
     color: white;
     border: 1px solid var(--border);
-    padding: 4px 8px;
-    font-size: 0.8rem;
-    border-radius: 4px;
+    padding: 6px 10px;
+    font-size: 0.85rem;
+    border-radius: 6px;
+}
+
+.hatch-style-select option {
+    background: #1e293b;
+    color: white;
+    font-size: 0.85rem;
 }
 
 /* Layer List */

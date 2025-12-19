@@ -26,7 +26,7 @@
                 <div class="title-wrap">
                     <h1>MAP<span>GEN</span></h1>
                     <div class="version-badge">
-                        <span class="v-num">v1.5.0</span>
+                        <span class="v-num">v1.5.1</span>
                         <span class="v-date">Dec 19, 2025</span>
                     </div>
                 </div>
@@ -130,16 +130,20 @@
                                         </select>
                                     </div>
                                     <div class="hatch-row">
-                                        <label>Size</label>
+                                        <div class="hatch-row-header">
+                                            <label>Size</label>
+                                            <span class="hatch-val" id="layer-buildings-hatch-scale-val">1.0</span>
+                                        </div>
                                         <input type="range" id="layer-buildings-hatch-scale" min="0.5" max="5"
-                                            step="0.1" value="1">
-                                        <span class="hatch-val" id="layer-buildings-hatch-scale-val">1.0</span>
+                                            step="0.1" value="1" title="Adjust the scale of the pattern">
                                     </div>
                                     <div class="hatch-row">
-                                        <label>Rot</label>
+                                        <div class="hatch-row-header">
+                                            <label>Rotation</label>
+                                            <span class="hatch-val" id="layer-buildings-hatch-rotation-val">45°</span>
+                                        </div>
                                         <input type="range" id="layer-buildings-hatch-rotation" min="0" max="180"
-                                            step="1" value="45">
-                                        <span class="hatch-val" id="layer-buildings-hatch-rotation-val">45°</span>
+                                            step="1" value="45" title="Rotate the hatch pattern">
                                     </div>
                                 </div>
                             </div>
@@ -274,16 +278,20 @@
                                         </select>
                                     </div>
                                     <div class="hatch-row">
-                                        <label>Size</label>
+                                        <div class="hatch-row-header">
+                                            <label>Size</label>
+                                            <span class="hatch-val" id="layer-parks-hatch-scale-val">1.0</span>
+                                        </div>
                                         <input type="range" id="layer-parks-hatch-scale" min="0.5" max="5" step="0.1"
-                                            value="1">
-                                        <span class="hatch-val" id="layer-parks-hatch-scale-val">1.0</span>
+                                            value="1" title="Adjust the scale of the pattern">
                                     </div>
                                     <div class="hatch-row">
-                                        <label>Rot</label>
+                                        <div class="hatch-row-header">
+                                            <label>Rotation</label>
+                                            <span class="hatch-val" id="layer-parks-hatch-rotation-val">45°</span>
+                                        </div>
                                         <input type="range" id="layer-parks-hatch-rotation" min="0" max="180" step="1"
-                                            value="45">
-                                        <span class="hatch-val" id="layer-parks-hatch-rotation-val">45°</span>
+                                            value="45" title="Rotate the hatch pattern">
                                     </div>
                                 </div>
                             </div>
@@ -411,16 +419,20 @@
                                         </select>
                                     </div>
                                     <div class="hatch-row">
-                                        <label>Size</label>
+                                        <div class="hatch-row-header">
+                                            <label>Size</label>
+                                            <span class="hatch-val" id="layer-parking-hatch-scale-val">1.0</span>
+                                        </div>
                                         <input type="range" id="layer-parking-hatch-scale" min="0.5" max="5" step="0.1"
-                                            value="1">
-                                        <span class="hatch-val" id="layer-parking-hatch-scale-val">1.0</span>
+                                            value="1" title="Adjust the scale of the pattern">
                                     </div>
                                     <div class="hatch-row">
-                                        <label>Rot</label>
+                                        <div class="hatch-row-header">
+                                            <label>Rotation</label>
+                                            <span class="hatch-val" id="layer-parking-hatch-rotation-val">45°</span>
+                                        </div>
                                         <input type="range" id="layer-parking-hatch-rotation" min="0" max="180" step="1"
-                                            value="45">
-                                        <span class="hatch-val" id="layer-parking-hatch-rotation-val">45°</span>
+                                            value="45" title="Rotate the hatch pattern">
                                     </div>
                                 </div>
                             </div>
