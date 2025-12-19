@@ -11,8 +11,8 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700&family=Playfair+Display:wght@400;700&family=Source+Code+Pro:wght@400;600&display=swap"
         rel="stylesheet">
-  <script type="module" crossorigin src="./assets/index-7ZRE36bt.js"></script>
-  <link rel="stylesheet" crossorigin href="./assets/index-B1MWMflt.css">
+  <script type="module" crossorigin src="./assets/index-DB0fFeuz.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-B_Ga4pfM.css">
 </head>
 
 <body>
@@ -25,7 +25,13 @@
                 </svg>
             </button>
             <div class="header">
-                <h1>MAP<span>GEN</span></h1>
+                <div class="title-wrap">
+                    <h1>MAP<span>GEN</span></h1>
+                    <div class="version-badge">
+                        <span class="v-num">v1.4.0</span>
+                        <span class="v-date">Dec 19, 2025</span>
+                    </div>
+                </div>
             </div>
 
             <div class="section search-section">
@@ -108,11 +114,21 @@
                                 <div id="layer-buildings-hatch-settings" class="hatch-settings">
                                     <div class="hatch-row">
                                         <select id="layer-buildings-hatch-style" class="hatch-style-select">
-                                            <option value="lines">Lines</option>
-                                            <option value="grid">Grid (Cross)</option>
-                                            <option value="dots">Dots</option>
+                                            <option value="lines">Diagonal Right (Lines)</option>
+                                            <option value="lines-left">Diagonal Left</option>
+                                            <option value="horizontal">Horizontal</option>
+                                            <option value="vertical">Vertical</option>
+                                            <option value="grid">Grid (Square)</option>
+                                            <option value="crosshatch">Crosshatch (Small)</option>
+                                            <option value="dots">Dots (Small)</option>
+                                            <option value="dots-large">Dots (Large)</option>
                                             <option value="dashed">Dashed Lines</option>
                                             <option value="zigzag">Zigzag</option>
+                                            <option value="waves">Waves</option>
+                                            <option value="hexagons">Hexagons</option>
+                                            <option value="bricks">Bricks</option>
+                                            <option value="stars">Stars</option>
+                                            <option value="squares">Squares</option>
                                         </select>
                                     </div>
                                     <div class="hatch-row">
@@ -242,11 +258,21 @@
                                 <div id="layer-parks-hatch-settings" class="hatch-settings">
                                     <div class="hatch-row">
                                         <select id="layer-parks-hatch-style" class="hatch-style-select">
-                                            <option value="lines">Lines</option>
-                                            <option value="grid">Grid (Cross)</option>
-                                            <option value="dots">Dots</option>
+                                            <option value="lines">Diagonal Right (Lines)</option>
+                                            <option value="lines-left">Diagonal Left</option>
+                                            <option value="horizontal">Horizontal</option>
+                                            <option value="vertical">Vertical</option>
+                                            <option value="grid">Grid (Square)</option>
+                                            <option value="crosshatch">Crosshatch (Small)</option>
+                                            <option value="dots">Dots (Small)</option>
+                                            <option value="dots-large">Dots (Large)</option>
                                             <option value="dashed">Dashed Lines</option>
                                             <option value="zigzag">Zigzag</option>
+                                            <option value="waves">Waves</option>
+                                            <option value="hexagons">Hexagons</option>
+                                            <option value="bricks">Bricks</option>
+                                            <option value="stars">Stars</option>
+                                            <option value="squares">Squares</option>
                                         </select>
                                     </div>
                                     <div class="hatch-row">
@@ -357,6 +383,47 @@
                                     <input type="color" id="layer-parking-stroke" value="#94a3b8">
                                     <input type="number" id="layer-parking-width" value="0.5" min="0" step="0.1"
                                         class="w-num">
+                                </div>
+                            </div>
+                            <div class="control-group">
+                                <label>Fill & Pattern</label>
+                                <div class="row-inputs">
+                                    <input type="color" id="layer-parking-fill" value="#e2e8f0">
+                                    <input type="checkbox" id="layer-parking-fill-enabled" checked title="Enable Fill">
+                                    <input type="checkbox" id="layer-parking-hatched" title="Use Pattern">
+                                </div>
+                                <div id="layer-parking-hatch-settings" class="hatch-settings">
+                                    <div class="hatch-row">
+                                        <select id="layer-parking-hatch-style" class="hatch-style-select">
+                                            <option value="lines">Diagonal Right (Lines)</option>
+                                            <option value="lines-left">Diagonal Left</option>
+                                            <option value="horizontal">Horizontal</option>
+                                            <option value="vertical">Vertical</option>
+                                            <option value="grid">Grid (Square)</option>
+                                            <option value="crosshatch">Crosshatch (Small)</option>
+                                            <option value="dots">Dots (Small)</option>
+                                            <option value="dots-large">Dots (Large)</option>
+                                            <option value="dashed">Dashed Lines</option>
+                                            <option value="zigzag">Zigzag</option>
+                                            <option value="waves">Waves</option>
+                                            <option value="hexagons">Hexagons</option>
+                                            <option value="bricks">Bricks</option>
+                                            <option value="stars">Stars</option>
+                                            <option value="squares">Squares</option>
+                                        </select>
+                                    </div>
+                                    <div class="hatch-row">
+                                        <label>Size</label>
+                                        <input type="range" id="layer-parking-hatch-scale" min="0.5" max="5" step="0.1"
+                                            value="1">
+                                        <span class="hatch-val" id="layer-parking-hatch-scale-val">1.0</span>
+                                    </div>
+                                    <div class="hatch-row">
+                                        <label>Rot</label>
+                                        <input type="range" id="layer-parking-hatch-rotation" min="0" max="180" step="1"
+                                            value="45">
+                                        <span class="hatch-val" id="layer-parking-hatch-rotation-val">45°</span>
+                                    </div>
                                 </div>
                             </div>
                             <div class="control-group">
