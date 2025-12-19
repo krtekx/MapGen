@@ -306,7 +306,7 @@ function setupControls() {
     // Vector Layers Controls
     const vectorToggle = document.getElementById('vector-mode-toggle');
     const layerList = document.getElementById('layer-toggles');
-    const exportBtn = document.getElementById('export-btn');
+
     const layers = ['buildings', 'water', 'streets', 'parks', 'railways', 'industrial', 'parking'];
 
     const updateUIState = () => {
@@ -317,8 +317,6 @@ function setupControls() {
                 styleGrid.style.pointerEvents = 'none';
                 styleGrid.style.opacity = '0.5';
             }
-            exportBtn.disabled = false;
-            exportBtn.innerText = "Export Laser (SVG)";
 
             // Auto Zoom-in if needed
             if (state.map.getZoom() < 15) {
@@ -333,15 +331,10 @@ function setupControls() {
                 styleGrid.style.pointerEvents = 'auto';
                 styleGrid.style.opacity = '1';
             }
-            exportBtn.disabled = false; // Allow raster SVG export
-            exportBtn.innerText = "Export Laser (SVG)";
             clearVectorLayers();
             state.tileLayer.setOpacity(1);
         }
     };
-
-    // Initial state
-    exportBtn.innerText = "Export Laser (SVG)";
 
     vectorToggle.addEventListener('change', (e) => {
         state.vectorMode = e.target.checked;
@@ -490,8 +483,6 @@ function setupControls() {
     }
 
     // Export
-    document.getElementById('export-btn').addEventListener('click', () => exportMap(false));
-    document.getElementById('export-xtool-btn').addEventListener('click', () => exportMap(true));
     document.getElementById('export-jpg-btn').addEventListener('click', exportJpg);
 
     // Markers
@@ -1116,266 +1107,7 @@ function geometryToPath(geometry, bounds, width, height) {
     return '';
 }
 
-async function exportMap(isXtool = false) {
-    const btn = isXtool ? document.getElementById('export-xtool-btn') : document.getElementById('export-btn');
-    const originalText = btn.innerText;
 
-    try {
-        if (!state.map) throw new Error("Map not initialized");
-        btn.disabled = true;
-        btn.innerText = isXtool ? "Optimizing for xTool..." : "Generating SVG...";
-
-        // If isXtool and vectorMode is off, we do a BitMap-to-XCS export
-        if (isXtool && !state.vectorMode) {
-            return exportXCS(null, null, null, null, true); // true for isBitmapOnly
-        }
-
-        const widthMm = parseFloat(document.getElementById('map-width').value) || 200;
-        const heightMm = parseFloat(document.getElementById('map-height').value) || 200;
-        const radiusMm = parseFloat(document.getElementById('map-radius').value) || 0;
-
-        // Add Markers (common to both export types)
-        const bounds = state.map.getBounds();
-        const markerSvg = state.markers.map(m => {
-            const latLng = m.marker.getLatLng();
-            const pos = project(latLng.lat, latLng.lng, bounds, widthMm, heightMm);
-            const text = m.marker.getTooltip().getContent();
-            return `
-                <g transform="translate(${pos.x}, ${pos.y})">
-                    <circle r="3" fill="red" />
-                    <text y="-5" text-anchor="middle" font-family="${state.settings.fontFamily}" font-size="${state.settings.fontSize}" fill="black">${text}</text>
-                </g>
-            `;
-        }).join('\n');
-
-
-        if (state.vectorMode) {
-            // --- VECTOR EXPORT ---
-            let geoJsonData = state.vectorData;
-
-            if (!geoJsonData) {
-                // simplified for brevity, assuming data exists or fetch happens
-                throw new Error("Vector data missing. Please toggle Vector Mode off/on.");
-            }
-
-            // Special case for native .xcs export
-            if (isXtool) {
-                return exportXCS(geoJsonData, bounds, widthMm, heightMm, false);
-            }
-
-            // Group paths
-            const groups = { streets: [], water: [], buildings: [], parks: [], railways: [], industrial: [], parking: [] };
-
-            geoJsonData.features.forEach(f => {
-                const props = f.properties;
-                const path = geometryToPath(f.geometry, bounds, widthMm, heightMm);
-                if (!path) return;
-
-                const layerKey = getLayerKey(f);
-                if (!layerKey || !state.activeLayers[layerKey].visible) return;
-
-                const conf = state.activeLayers[layerKey];
-                const style = `stroke="${conf.stroke}" stroke-width="${conf.width}" fill="${conf.hatched ? `url(#hatch-diag-${layerKey})` : (conf.fillEnabled ? conf.fill : 'none')}" fill-opacity="${conf.fillEnabled ? (conf.hatched ? 1 : 0.2) : 0}"`;
-
-                groups[layerKey].push(`<path d="${path}" ${style} />`);
-            });
-
-            // Helper to get parameters
-            const getAttrs = (k) => {
-                const c = state.activeLayers[k];
-                if (isXtool) {
-                    // XCS specific logic
-                    let stroke = '#000000';
-                    if (c.laserMode === 'score') stroke = '#0000FF'; // Blue
-                    if (c.laserMode === 'cut') stroke = '#FF0000'; // Red
-
-                    const fill = c.laserMode === 'engrave' ? '#000000' : 'none';
-                    return `stroke="${stroke}" stroke-width="${c.width}" fill="${fill}" xtool:mode="${c.laserMode}" xtool:power="${c.power}" xtool:speed="${c.speed}"`;
-                }
-                const fill = c.hatched ? `url(#hatch-diag-${k})` : (c.fillEnabled ? c.fill : 'none');
-                return `stroke="${c.stroke}" stroke-width="${c.width}" fill="${fill}" fill-opacity="${c.fillEnabled ? 1 : (c.hatched ? 1 : 0)}"`;
-            };
-
-            // Pattern defs for export (Matching main logic)
-            const patternsSvg = Object.keys(state.activeLayers)
-                .filter(k => state.activeLayers[k].hatched)
-                .map(k => {
-                    const conf = state.activeLayers[k];
-                    const size = 4 * (conf.hatchScale || 1);
-
-                    // Background
-                    let bg = '';
-                    if (conf.fillEnabled) {
-                        bg = `<rect width="${size}" height="${size}" fill="${conf.fill}" />`;
-                    }
-
-                    const hColor = conf.hatchColor || '#000000';
-                    const hWidth = (conf.hatchWidth || 0.5);
-
-                    const lineStr = (x1, y1, x2, y2, d = '') => `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${hColor}" stroke-width="${hWidth}" ${d ? `stroke-dasharray="${d}"` : ''}/>`;
-                    const pathStr = (d, isF = false) => `<path d="${d}" fill="${isF ? hColor : 'none'}" stroke="${isF ? 'none' : hColor}" stroke-width="${hWidth}"/>`;
-                    const circleStr = (cx, cy, r) => `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${hColor}"/>`;
-                    const rectStr = (x, y, w, h) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="none" stroke="${hColor}" stroke-width="${hWidth}"/>`;
-
-                    let content = '';
-
-                    switch (conf.hatchStyle) {
-                        case 'lines-left': content = lineStr(0, size, size, 0); break;
-                        case 'horizontal': content = lineStr(0, size / 2, size, size / 2); break;
-                        case 'vertical': content = lineStr(size / 2, 0, size / 2, size); break;
-                        case 'grid': content = lineStr(0, 0, 0, size) + lineStr(0, 0, size, 0); break;
-                        case 'crosshatch': content = lineStr(0, 0, size, size) + lineStr(0, size, size, 0); break;
-                        case 'dots': content = circleStr(size / 2, size / 2, size / 6); break;
-                        case 'dots-large': content = circleStr(size / 2, size / 2, size / 3); break;
-                        case 'dashed': content = lineStr(0, 0, 0, size, `${size / 2},${size / 2}`); break;
-                        case 'zigzag': content = pathStr(`M 0 ${size} L ${size / 2} 0 L ${size} ${size}`); break;
-                        case 'waves': content = pathStr(`M 0 ${size / 2} Q ${size / 4} 0, ${size / 2} ${size / 2} T ${size} ${size / 2}`); break;
-                        case 'hexagons':
-                            const h_exp = (Math.sqrt(3) / 2) * size;
-                            content = pathStr(`M ${size / 4} 0 L ${size * 3 / 4} 0 L ${size} ${h_exp / 2} L ${size * 3 / 4} ${h_exp} L ${size / 4} ${h_exp} L 0 ${h_exp / 2} Z`);
-                            break;
-                        case 'bricks': content = lineStr(0, 0, size, 0) + lineStr(0, size / 2, size, size / 2) + lineStr(0, 0, 0, size / 2) + lineStr(size / 2, size / 2, size / 2, size); break;
-                        case 'stars': content = pathStr(`M ${size / 2} 0 L ${size / 2} ${size} M 0 ${size / 2} L ${size} ${size / 2} M ${size / 4} ${size / 4} L ${size * 3 / 4} ${size * 3 / 4} M ${size * 3 / 4} ${size / 4} L ${size / 4} ${size * 3 / 4}`); break;
-                        case 'squares': content = rectStr(size / 4, size / 4, size / 2, size / 2); break;
-                        case 'lines': default: content = lineStr(0, 0, 0, size); break;
-                    }
-                    return `<pattern id="hatch-diag-${k}" patternUnits="userSpaceOnUse" width="${size}" height="${size}" patternTransform="rotate(${conf.hatchRotation || 0})">${bg}${content}</pattern>`;
-                }).join('\n');
-
-            // Street Labels SVG
-            const labelsSvg = [];
-            if (state.activeLayers.streets.labelsEnabled) {
-                geoJsonData.features.filter(f => f.properties.highway && f.properties.name && state.activeLayers.streets.visible).forEach(f => {
-                    let center;
-                    if (f.geometry.type === 'LineString') {
-                        const mid = Math.floor(f.geometry.coordinates.length / 2);
-                        center = f.geometry.coordinates[mid];
-                    } else if (f.geometry.type === 'Polygon') center = f.geometry.coordinates[0][0];
-
-                    if (center) {
-                        const pos = project(center[1], center[0], bounds, widthMm, heightMm);
-                        labelsSvg.push(`<text x="${pos.x}" y="${pos.y}" font-family="sans-serif" font-size="2" fill="#555" text-anchor="middle" opacity="0.8">${f.properties.name}</text>`);
-                    }
-                });
-            }
-
-            const isSplitExport = document.getElementById('export-split-check')?.checked;
-            const isOutlineChecked = document.getElementById('export-outline-check')?.checked;
-            const filename = isXtool ? 'xtool-project.svg' : (isSplitExport ? 'vector-map' : 'vector-map.svg');
-
-            // Frame outline path
-            const framePath = `M 0 0 H ${widthMm} V ${heightMm} H 0 Z`;
-            const frameStyle = isXtool ? `stroke="#FF0000" stroke-width="0.2" fill="none" xtool:mode="cut" xtool:power="100" xtool:speed="10"` : `stroke="#FF0000" stroke-width="0.2" fill="none"`;
-            const frameSvg = isOutlineChecked ? `<g id="Frame_Outline">${isXtool ? `<path d="${framePath}" ${frameStyle} />` : `<rect x="0" y="0" width="${widthMm}" height="${heightMm}" rx="${radiusMm}" ry="${radiusMm}" ${frameStyle} />`}</g>` : '';
-
-            if (isSplitExport && !isXtool) {
-                // Export multiple files
-                const layerKeys = Object.keys(groups);
-                for (const key of layerKeys) {
-                    if (groups[key].length === 0) continue;
-
-                    const layerSvg = `
-    <svg width="${widthMm}mm" height="${heightMm}mm" viewBox="0 0 ${widthMm} ${heightMm}" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-            <clipPath id="mapClip">
-                <rect x="0" y="0" width="${widthMm}" height="${heightMm}" rx="${radiusMm}" ry="${radiusMm}" />
-            </clipPath>
-            ${patternsSvg}
-        </defs>
-        <g clip-path="url(#mapClip)">
-            <g id="${key}" ${getAttrs(key)}>${groups[key].join('')}</g>
-        </g>
-    </svg>`;
-                    downloadFile(layerSvg, `map-${key}.svg`, 'image/svg+xml');
-                    await new Promise(r => setTimeout(r, 200)); // Delay between downloads
-                }
-
-                // Markers, Labels and Frame Outline as another file
-                if (markerSvg || labelsSvg.length > 0 || isOutlineChecked) {
-                    const auxSvg = `
-    <svg width="${widthMm}mm" height="${heightMm}mm" viewBox="0 0 ${widthMm} ${heightMm}" xmlns="http://www.w3.org/2000/svg">
-        <g id="Labels">${labelsSvg.join('')}</g>
-        <g id="Markers">${markerSvg}</g>
-        ${frameSvg}
-    </svg>`;
-                    downloadFile(auxSvg, 'map-annotations.svg', 'image/svg+xml');
-                }
-            } else {
-                // original single file export
-                const laserNs = isXtool ? 'xmlns:xtool="http://www.xtool.com/xtool"' : '';
-                const svgContent = `
-    <svg width="${widthMm}mm" height="${heightMm}mm" viewBox="0 0 ${widthMm} ${heightMm}" xmlns="http://www.w3.org/2000/svg" ${laserNs}>
-        <defs>
-            <clipPath id="mapClip">
-                <rect x="0" y="0" width="${widthMm}" height="${heightMm}" rx="${radiusMm}" ry="${radiusMm}" />
-            </clipPath>
-            ${patternsSvg}
-        </defs>
-        ${isXtool ? '' : `<rect x="0" y="0" width="${widthMm}" height="${heightMm}" rx="${radiusMm}" ry="${radiusMm}" fill="${state.settings.backgroundColor}" />`}
-        <g clip-path="url(#mapClip)">
-            <g id="Industrial" ${getAttrs('industrial')}>${groups.industrial.join('')}</g>
-            <g id="Parking" ${getAttrs('parking')}>${groups.parking.join('')}</g>
-            <g id="Parks" ${getAttrs('parks')}>${groups.parks.join('')}</g>
-            <g id="Water" ${getAttrs('water')}>${groups.water.join('')}</g>
-            <g id="Buildings" ${getAttrs('buildings')}>${groups.buildings.join('')}</g>
-            <g id="Railways" ${getAttrs('railways')}>${groups.railways.join('')}</g>
-            <g id="Streets" ${getAttrs('streets')}>${groups.streets.join('')}</g>
-            <g id="Labels">${labelsSvg.join('')}</g>
-            <g id="Markers">${markerSvg}</g>
-        </g>
-        ${frameSvg}
-    </svg>`;
-                downloadFile(svgContent, filename, 'image/svg+xml');
-            }
-
-        } else {
-            // --- BITMAP EXPORT (Raster) ---
-            btn.innerText = "Capturing...";
-            // Disable map controls to avoid capturing UI artifacts if any
-            state.map.dragging.disable();
-            state.map.scrollWheelZoom.disable();
-
-            // Wait a moment for tiles to handle any pending load (optional but safer)
-            await new Promise(r => setTimeout(r, 500));
-
-            const mapElement = document.getElementById('map');
-            const canvas = await html2canvas(mapElement, {
-                useCORS: true,
-                scale: 2 // High res
-            });
-
-            // Re-enable
-            state.map.dragging.enable();
-            state.map.scrollWheelZoom.enable();
-
-            const imgData = canvas.toDataURL('image/png');
-
-            // Wrap in SVG to handle dimensions/radius same as vector mode
-            const svgContent = `
-    <svg width="${widthMm}mm" height="${heightMm}mm" viewBox="0 0 ${widthMm} ${heightMm}" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-        <defs>
-            <clipPath id="mapClip">
-                <rect x="0" y="0" width="${widthMm}" height="${heightMm}" rx="${radiusMm}" ry="${radiusMm}" />
-            </clipPath>
-        </defs>
-        <rect x="0" y="0" width="${widthMm}" height="${heightMm}" rx="${radiusMm}" ry="${radiusMm}" fill="${state.settings.backgroundColor}" />
-        <g clip-path="url(#mapClip)">
-            <image width="${widthMm}" height="${heightMm}" href="${imgData}" preserveAspectRatio="xMidYMid slice" />
-            <g id="Markers">${markerSvg}</g>
-        </g>
-         <rect x="0" y="0" width="${widthMm}" height="${heightMm}" rx="${radiusMm}" ry="${radiusMm}" fill="none" stroke="#000" stroke-width="0.2" />
-    </svg>`;
-            downloadFile(svgContent, 'raster-map.svg', 'image/svg+xml');
-        }
-
-    } catch (e) {
-        console.error(e);
-        alert("Export failed: " + e.message);
-    } finally {
-        btn.innerText = originalText;
-        btn.disabled = false;
-    }
-}
 
 function downloadFile(content, fileName, mimeType) {
     const link = document.createElement('a');
@@ -1404,44 +1136,43 @@ function downloadFile(content, fileName, mimeType) {
 
 async function exportJpg() {
     const btn = document.getElementById('export-jpg-btn');
-    const originalText = btn.innerText;
+    if (!btn) return;
+    const originalText = btn.innerHTML;
 
     try {
         if (!state.map) throw new Error("Map not initialized");
         btn.disabled = true;
-        btn.innerText = "Processing...";
+        btn.innerText = "Generating JPG...";
 
-        // Disable interactive controls to prevent shifts
-        state.map.dragging.disable();
-        state.map.scrollWheelZoom.disable();
-
-        // High scale for print quality (approx 300 DPI)
-        // 1 mm = 3.78 px (screen) -> ~11.8 px (300 dpi) -> Scale ~3.125
-        const scale = 3.125;
+        // High scale for print quality
+        const scale = 4; // High definition capture
 
         const mapElement = document.getElementById('map-wrapper');
 
+        // Ensure we capture even if scrolled or moved
         const canvas = await html2canvas(mapElement, {
             useCORS: true,
             scale: scale,
-            backgroundColor: state.settings.backgroundColor, // Capture flat background
+            backgroundColor: state.settings.backgroundColor,
             logging: false,
-            allowTaint: true
+            allowTaint: true,
+            onclone: (clonedDoc) => {
+                // Ensure the cloned map wrapper is visible and positioned correctly for capture
+                const clonedWrapper = clonedDoc.getElementById('map-wrapper');
+                clonedWrapper.style.transform = 'none';
+                clonedWrapper.style.margin = '0';
+            }
         });
 
-        // Re-enable
-        state.map.dragging.enable();
-        state.map.scrollWheelZoom.enable();
-
-        // Download
-        const imgData = canvas.toDataURL('image/jpeg', 0.9); // 90% quality JPG
-        downloadFile(imgData, 'map-engrave.jpg', 'image/jpeg');
+        // Download as JPG
+        const imgData = canvas.toDataURL('image/jpeg', 0.95);
+        downloadFile(imgData, `map-export-${Date.now()}.jpg`, 'image/jpeg');
 
     } catch (e) {
-        console.error(e);
+        console.error("JPG Export failed:", e);
         alert("Export failed: " + e.message);
     } finally {
-        btn.innerText = originalText;
+        btn.innerHTML = originalText;
         btn.disabled = false;
     }
 } function applyGraphicTheme(themeId) {
@@ -1542,10 +1273,7 @@ async function exportJpg() {
 
         // Trigger same logic as toggle
         const layerList = document.getElementById('layer-toggles');
-        const styleSelect = document.getElementById('map-style-select');
-        const exportBtn = document.getElementById('export-btn');
         layerList.classList.remove('disabled');
-        exportBtn.innerText = "Export Laser (SVG)";
 
         if (state.map.getZoom() < 15) {
             state.map.flyTo(state.map.getCenter(), 15);
@@ -1553,331 +1281,4 @@ async function exportJpg() {
             fetchAndRenderVectors();
         }
     }
-}
-
-/**
- * Native .xcs Export for xTool Creative Space
- * Generates a JSON project file compatible with xTool Studio.
- */
-/**
- * Helper to get layer key from feature properties
- */
-const getLayerKey = (f) => {
-    const p = f.properties;
-    if (p.highway) return 'streets';
-    if (p.railway) return 'railways';
-    if (p.waterway || p.natural === 'water' || p.landuse === 'reservoir') return 'water';
-    if (p.building) return 'buildings';
-    if (p.leisure === 'park' || p.leisure === 'garden' || p.landuse === 'grass' || p.landuse === 'forest' || p.natural === 'wood' || p.natural === 'scrub' || p.landuse === 'orchard' || p.landuse === 'vineyard') return 'parks';
-    if (p.landuse === 'industrial' || p.landuse === 'commercial') return 'industrial';
-    if (p.amenity === 'parking') return 'parking';
-    return null;
-};
-
-/**
- * Native .xcs Export for xTool Creative Space
- * Generates a JSON project file compatible with xTool Studio.
- */
-async function exportXCS(geoJsonData, bounds, widthMm, heightMm, isBitmapOnly = false) {
-    const canvasId = generateUUID();
-    const projectTraceID = generateUUID();
-
-    const layerData = {};
-    const displays = [];
-    const processingDataMap = {};
-    const canvasWidth = parseFloat(document.getElementById('map-width').value) || 200;
-    const canvasHeight = parseFloat(document.getElementById('map-height').value) || 200;
-
-    if (isBitmapOnly) {
-        // --- BITMAP ONLY EXPORT ---
-        const wrapper = document.getElementById('map-wrapper');
-        const canvas = await html2canvas(wrapper, {
-            useCORS: true,
-            scale: 2,
-            backgroundColor: state.settings.backgroundColor
-        });
-        const imgData = canvas.toDataURL('image/png');
-        const id = generateUUID();
-
-        displays.push({
-            id: id,
-            name: "Map Engraving",
-            type: "BITMAP",
-            x: 0,
-            y: 0,
-            angle: 0,
-            scale: { x: 1, y: 1 },
-            skew: { x: 0, y: 0 },
-            pivot: { x: 0, y: 0 },
-            offsetX: 0,
-            offsetY: 0,
-            lockRatio: true,
-            visible: true,
-            layerTag: "#000000",
-            layerColor: "#000000",
-            resourceOrigin: imgData,
-            width: canvasWidth,
-            height: canvasHeight,
-            isFill: true
-        });
-
-        processingDataMap[id] = {
-            isFill: true,
-            type: "BITMAP",
-            processingType: "BITMAP_ENGRAVING",
-            data: {
-                BITMAP_ENGRAVING: {
-                    materialType: "customize",
-                    planType: "official",
-                    parameter: {
-                        customize: { power: 60, speed: 100, repeat: 1, laser: "laser_10W", density: 100, bitmapScanMode: "zMode", bitmapMode: "grayscale", processHead: "LASER" }
-                    }
-                }
-            }
-        };
-
-        layerData["#000000"] = { name: "Engraving", order: 1, visible: true };
-
-    } else {
-        // --- VECTOR EXPORT ---
-        // Prepare Layer Metadata (Colors in XCS)
-        Object.keys(state.activeLayers).forEach((key, idx) => {
-            const conf = state.activeLayers[key];
-            if (!conf.visible) return;
-            const color = conf.stroke || "#000000";
-            layerData[color] = {
-                name: key.charAt(0).toUpperCase() + key.slice(1),
-                order: idx + 1,
-                visible: true
-            };
-        });
-
-        // Process Features into XCS Displays
-        geoJsonData.features.forEach(f => {
-            const key = getLayerKey(f);
-            if (!key || !state.activeLayers[key].visible) return;
-
-            const conf = state.activeLayers[key];
-            const id = generateUUID();
-            const dPath = geometryToPath(f.geometry, bounds, widthMm, heightMm);
-            if (!dPath) return;
-
-            // Create display object for the path
-            const display = {
-                id: id,
-                name: null,
-                type: "PATH",
-                x: 0,
-                y: 0,
-                angle: 0,
-                scale: { x: 1, y: 1 },
-                skew: { x: 0, y: 0 },
-                pivot: { x: 0, y: 0 },
-                localSkew: { x: 0, y: 0 },
-                offsetX: 0,
-                offsetY: 0,
-                lockRatio: true,
-                isClosePath: true,
-                zOrder: 0,
-                groupTag: "",
-                layerTag: conf.stroke,
-                layerColor: conf.stroke,
-                visible: true,
-                originColor: "#000000",
-                enableTransform: true,
-                visibleState: true,
-                lockState: false,
-                resourceOrigin: "",
-                customData: {},
-                rootComponentId: "",
-                minCanvasVersion: "0.0.0",
-                fill: { paintType: "color", visible: conf.fillEnabled && !conf.hatched, color: toXToolColor(conf.fill), alpha: 1 },
-                stroke: { paintType: "color", visible: true, color: toXToolColor(conf.stroke), alpha: 1, width: conf.width || 0.1, cap: "butt", join: "miter", miterLimit: 4, alignment: 0.5 },
-                width: widthMm,
-                height: heightMm,
-                isFill: conf.fillEnabled && !conf.hatched,
-                lineColor: toXToolColor(conf.stroke),
-                fillColor: conf.fill,
-                points: [],
-                dPath: dPath,
-                fillRule: "nonzero",
-                graphicX: 0,
-                graphicY: 0,
-                isCompoundPath: false
-            };
-
-            displays.push(display);
-
-            // Add to processing data map (Power/Speed settings)
-            const procType = conf.laserMode === 'cut' ? "VECTOR_CUTTING" : "VECTOR_ENGRAVING";
-            const isFillXCS = conf.laserMode === 'engrave';
-
-            processingDataMap[id] = {
-                isFill: isFillXCS,
-                type: "PATH",
-                processingType: procType,
-                data: {
-                    VECTOR_ENGRAVING: {
-                        materialType: "customize",
-                        planType: "official",
-                        parameter: {
-                            customize: { power: parseInt(conf.power), speed: parseInt(conf.speed), repeat: 1, laser: "laser_10W", density: 100, processHead: "LASER" }
-                        }
-                    },
-                    VECTOR_CUTTING: {
-                        materialType: "customize",
-                        planType: "official",
-                        parameter: {
-                            customize: { power: parseInt(conf.power), speed: parseInt(conf.speed), repeat: 1, laser: "laser_10W", processHead: "LASER" }
-                        }
-                    }
-                }
-            };
-        });
-
-        // Add Frame Outline to XCS
-        const isOutlineChecked = document.getElementById('export-outline-check')?.checked;
-        if (isOutlineChecked) {
-            const frameId = generateUUID();
-            const framePath = `M 0 0 H ${canvasWidth} V ${canvasHeight} H 0 Z`;
-
-            displays.push({
-                id: frameId,
-                name: "Frame Outline",
-                type: "PATH",
-                x: 0,
-                y: 0,
-                angle: 0,
-                scale: { x: 1, y: 1 },
-                skew: { x: 0, y: 0 },
-                pivot: { x: 0, y: 0 },
-                localSkew: { x: 0, y: 0 },
-                offsetX: 0,
-                offsetY: 0,
-                lockRatio: true,
-                isClosePath: true,
-                zOrder: 999, // On top
-                groupTag: "",
-                layerTag: "#FF0000",
-                layerColor: "#FF0000",
-                visible: true,
-                originColor: "#FF0000",
-                enableTransform: true,
-                visibleState: true,
-                lockState: false,
-                resourceOrigin: "",
-                customData: {},
-                rootComponentId: "",
-                minCanvasVersion: "0.0.0",
-                fill: { paintType: "none", visible: false, color: 0, alpha: 1 },
-                stroke: { paintType: "color", visible: true, color: 16711680, alpha: 1, width: 0.2, cap: "butt", join: "miter", miterLimit: 4, alignment: 0.5 },
-                width: canvasWidth,
-                height: canvasHeight,
-                isFill: false,
-                lineColor: 16711680,
-                fillColor: "#000000",
-                points: [],
-                dPath: framePath,
-                fillRule: "nonzero",
-                graphicX: 0,
-                graphicY: 0,
-                isCompoundPath: false
-            });
-
-            processingDataMap[frameId] = {
-                isFill: false,
-                type: "PATH",
-                processingType: "VECTOR_CUTTING",
-                data: {
-                    VECTOR_CUTTING: {
-                        materialType: "customize",
-                        planType: "official",
-                        parameter: {
-                            customize: { power: 100, speed: 10, repeat: 1, laser: "laser_10W", processHead: "LASER" }
-                        }
-                    }
-                }
-            };
-
-            layerData["#FF0000"] = { name: "Frame Outline (Cut)", order: 0, visible: true };
-        }
-    }
-
-    // Assemble final project structure
-    const xcsStructure = {
-        canvasId: canvasId,
-        canvas: [{
-            id: canvasId,
-            title: "MapGen Project",
-            layerData: layerData,
-            groupData: {},
-            displays: displays,
-            extendInfo: {
-                version: "2.15.17",
-                minCanvasVersion: "0.0.0",
-                displayProcessConfigMap: {},
-                rulerPluginData: { rulerGuide: [] },
-                gridOptions: { color: "normal", isShow: true }
-            }
-        }],
-        extId: "D1_Pro",
-        extName: "D1 Pro",
-        device: {
-            id: "D1_Pro",
-            power: 10,
-            data: {
-                dataType: "Map",
-                value: [
-                    [canvasId, {
-                        mode: "LASER_PLANE",
-                        data: {
-                            LASER_PLANE: {
-                                material: 1, focalLen: 5, isProcessByLayer: false, pathPlanning: "auto",
-                                thickness: 3, fanGear: 3, purifierGear: 4,
-                                precautionCodes: ["FLAMMABLE", "TURN_ON_AIR_PUMP"]
-                            }
-                        },
-                        displays: {
-                            dataType: "Map",
-                            value: Object.entries(processingDataMap)
-                        }
-                    }]
-                ]
-            }
-        },
-        minRequiredVersion: "2.6.0",
-        projectTraceID: projectTraceID
-    };
-
-    // Download Blob
-    const blob = new Blob([JSON.stringify(xcsStructure, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `MapGen_${new Date().getTime()}.xcs`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-
-    // Reset button UI
-    const btn = document.getElementById('export-xtool-btn');
-    btn.disabled = false;
-    btn.innerText = "Open in xTool Studio";
-}
-
-function generateUUID() {
-    if (typeof crypto.randomUUID === 'function') {
-        return crypto.randomUUID();
-    }
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-        var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
-        return v.toString(16);
-    });
-}
-
-function toXToolColor(hex) {
-    if (!hex) return 0;
-    const cleanHex = hex.replace('#', '');
-    return parseInt(cleanHex, 16);
 }
