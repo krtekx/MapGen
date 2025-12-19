@@ -25,6 +25,8 @@ const state = {
     tileLayer: null,
     markers: [],
     vectorMode: false,
+    blackMode: false,
+    grayscaleMode: false,
     vectorData: null, // Stores GeoJSON
     vectorLayers: {}, // Stores Leaflet Layer references
     activeLayers: {
@@ -485,6 +487,25 @@ function setupControls() {
         if (state.vectorMode) renderVectorLayers();
     });
 
+    // Special Modes (Black & Grayscale)
+    document.getElementById('black-mode-toggle').addEventListener('change', (e) => {
+        state.blackMode = e.target.checked;
+        if (state.blackMode && state.grayscaleMode) {
+            state.grayscaleMode = false;
+            document.getElementById('grayscale-mode-toggle').checked = false;
+        }
+        if (state.vectorMode) renderVectorLayers();
+    });
+
+    document.getElementById('grayscale-mode-toggle').addEventListener('change', (e) => {
+        state.grayscaleMode = e.target.checked;
+        if (state.grayscaleMode && state.blackMode) {
+            state.blackMode = false;
+            document.getElementById('black-mode-toggle').checked = false;
+        }
+        if (state.vectorMode) renderVectorLayers();
+    });
+
     // Background Color
     const bgColorInput = document.getElementById('map-bg-color');
     bgColorInput.addEventListener('input', (e) => {
@@ -870,6 +891,34 @@ function clearVectorLayers() {
     state.vectorLayers = {};
 }
 
+const toGrayscale = (hex) => {
+    if (!hex || hex.startsWith('url')) return hex;
+    const color = hex.replace('#', '');
+    const r = parseInt(color.substring(0, 2), 16);
+    const g = parseInt(color.substring(2, 4), 16);
+    const b = parseInt(color.substring(4, 6), 16);
+    const gray = Math.round(0.299 * r + 0.587 * g + 0.114 * b);
+    const hexVal = gray.toString(16).padStart(2, '0');
+    return `#${hexVal}${hexVal}${hexVal}`;
+};
+
+const getEffectiveColors = (conf) => {
+    let stroke = conf.stroke;
+    let fill = conf.fill;
+    let hatchColor = conf.hatchColor || '#000000';
+
+    if (state.blackMode) {
+        stroke = '#000000';
+        fill = '#000000';
+        hatchColor = '#000000';
+    } else if (state.grayscaleMode) {
+        stroke = toGrayscale(stroke);
+        fill = toGrayscale(fill);
+        hatchColor = toGrayscale(hatchColor);
+    }
+    return { stroke, fill, hatchColor };
+};
+
 function renderVectorLayers() {
     if (!state.vectorData) return;
     clearVectorLayers();
@@ -884,6 +933,8 @@ function renderVectorLayers() {
     const defs = document.querySelector('defs');
     Object.keys(state.activeLayers).forEach(key => {
         const conf = state.activeLayers[key];
+        const { stroke, fill, hatchColor } = getEffectiveColors(conf);
+
         if (conf.hatched) {
             const patternId = `hatch-diag-${key}`;
             let pattern = document.getElementById(patternId);
@@ -906,7 +957,7 @@ function renderVectorLayers() {
                 const bgRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
                 bgRect.setAttribute('width', size);
                 bgRect.setAttribute('height', size);
-                bgRect.setAttribute('fill', conf.fill);
+                bgRect.setAttribute('fill', fill);
                 // No opacity here, solid fill
                 pattern.appendChild(bgRect);
             }
@@ -915,7 +966,7 @@ function renderVectorLayers() {
                 const l = document.createElementNS('http://www.w3.org/2000/svg', 'line');
                 l.setAttribute('x1', x1); l.setAttribute('y1', y1);
                 l.setAttribute('x2', x2); l.setAttribute('y2', y2);
-                l.setAttribute('stroke', conf.hatchColor || '#000000'); // Use hatch color
+                l.setAttribute('stroke', hatchColor); // Use hatch color
 
                 // Scale hatch width
                 const hw = (conf.hatchWidth || 0.5) * zoomScale;
@@ -925,7 +976,7 @@ function renderVectorLayers() {
                 return l;
             };
 
-            const hColor = conf.hatchColor || '#000000';
+            const hColor = hatchColor;
             const hWidth = (conf.hatchWidth || 0.5) * zoomScale;
 
             // Helper for circle/paths
@@ -1036,15 +1087,14 @@ function renderVectorLayers() {
 
     const getStyle = (key) => {
         const conf = state.activeLayers[key];
+        const { stroke, fill } = getEffectiveColors(conf);
+
         return {
-            color: conf.stroke,
-            // Scale stroke weight by zoomScale for 'Absolute' thickness
+            color: stroke,
             weight: conf.width * zoomScale,
             opacity: 1,
             fill: true,
-            // If HATCHED, used URL. If hatched & fillEnabled, pattern HAS bg. 
-            // If NOT hatched but fillEnabled, use conf.fill.
-            fillColor: conf.hatched ? `url(#hatch-diag-${key})` : conf.fill,
+            fillColor: conf.hatched ? `url(#hatch-diag-${key})` : fill,
             fillOpacity: (conf.fillEnabled || conf.hatched) ? 1 : 0
         };
     };
@@ -1224,50 +1274,50 @@ async function exportJpg() {
     const themes = {
         industrial: {
             style: 'standard',
-            bg: '#0f172a',
+            bg: '#1a1a1a',
             layers: {
-                buildings: { stroke: '#f97316', width: 0.5, fill: '#f97316', fillEnabled: true, hatched: true },
-                water: { stroke: '#1e293b', width: 1, fill: '#1e293b', fillEnabled: true, hatched: false },
-                streets: { stroke: '#475569', width: 1.2, fill: '#ffffff', fillEnabled: false, hatched: false },
-                parks: { stroke: '#064e3b', width: 0, fill: '#064e3b', fillEnabled: true, hatched: false },
-                railways: { stroke: '#facc15', width: 2, fill: '#000000', fillEnabled: false, hatched: false },
-                industrial: { visible: true, stroke: '#475569', width: 0.5, fill: '#334155', fillEnabled: true, hatched: true }
+                buildings: { visible: true, stroke: '#f97316', width: 0.8, fill: '#334155', fillEnabled: true, hatched: true, hatchStyle: 'lines', hatchScale: 0.8, hatchRotation: 45, hatchColor: '#f97316', hatchWidth: 0.4 },
+                water: { visible: true, stroke: '#0f172a', width: 1.5, fill: '#1e293b', fillEnabled: true, hatched: false },
+                streets: { visible: true, stroke: '#64748b', width: 1.2, fill: '#ffffff', fillEnabled: false },
+                parks: { visible: true, stroke: '#064e3b', width: 0, fill: '#064e3b', fillEnabled: true, hatched: true, hatchStyle: 'dots', hatchScale: 1.2, hatchColor: '#059669' },
+                railways: { visible: true, stroke: '#fbbf24', width: 2, fill: 'none', fillEnabled: false },
+                industrial: { visible: true, stroke: '#475569', width: 0.5, fill: '#334155', fillEnabled: true, hatched: true, hatchStyle: 'grid', hatchScale: 1.5, hatchColor: '#64748b' }
             }
         },
         blueprint: {
             style: 'blueprint',
-            bg: '#000044',
+            bg: '#001a4d',
             layers: {
-                buildings: { stroke: '#ffffff', width: 0.8, fill: '#ffffff', fillEnabled: false, hatched: false },
-                water: { stroke: '#00ffff', width: 1, fill: '#00ffff', fillEnabled: true, hatched: true },
-                streets: { stroke: '#ffffff', width: 1.5, fill: '#ffffff', fillEnabled: false, hatched: false },
-                parks: { stroke: '#00aa00', width: 0.5, fill: '#00aa00', fillEnabled: false, hatched: false },
-                railways: { stroke: '#ffffff', width: 1, fill: '#ffffff', fillEnabled: false, hatched: false },
-                industrial: { visible: false, stroke: '#ffffff', width: 0.5, fill: '#ffffff', fillEnabled: false, hatched: false }
+                buildings: { visible: true, stroke: '#ffffff', width: 0.8, fill: 'none', fillEnabled: false, hatched: false },
+                water: { visible: true, stroke: '#00ffff', width: 1, fill: '#003366', fillEnabled: true, hatched: true, hatchStyle: 'waves', hatchScale: 1, hatchRotation: 0, hatchColor: '#00ffff', hatchWidth: 0.3 },
+                streets: { visible: true, stroke: '#ffffff', width: 1.5, fill: 'none', fillEnabled: false },
+                parks: { visible: true, stroke: '#00ff00', width: 0.3, fill: 'none', fillEnabled: false, hatched: true, hatchStyle: 'grid', hatchScale: 0.5, hatchColor: '#00ff00' },
+                railways: { visible: true, stroke: '#ffffff', width: 1, fill: 'none', fillEnabled: false },
+                industrial: { visible: false }
             }
         },
         nature: {
-            style: 'line',
-            bg: '#fcfaf2',
+            style: 'light',
+            bg: '#fdf6e3',
             layers: {
-                buildings: { stroke: '#8b4513', width: 0.5, fill: '#d2b48c', fillEnabled: true, hatched: false },
-                water: { stroke: '#4682b4', width: 1.5, fill: '#b0c4de', fillEnabled: true, hatched: false },
-                streets: { stroke: '#555555', width: 0.8, fill: '#ffffff', fillEnabled: false, hatched: false },
-                parks: { stroke: '#228b22', width: 0, fill: '#228b22', fillEnabled: true, hatched: true },
-                railways: { stroke: '#333333', width: 1, fill: '#000000', fillEnabled: false, hatched: false },
-                industrial: { visible: false, stroke: '#94a3b8', width: 0.5, fill: '#cbd5e1', fillEnabled: false, hatched: false }
+                buildings: { visible: true, stroke: '#8b4513', width: 0.5, fill: '#eee8d5', fillEnabled: true, hatched: false },
+                water: { visible: true, stroke: '#268bd2', width: 1.5, fill: '#b58900', fillEnabled: true, hatched: true, hatchStyle: 'waves', hatchScale: 1.5, hatchColor: '#268bd2' },
+                streets: { visible: true, stroke: '#93a1a1', width: 0.8, fill: '#ffffff', fillEnabled: false },
+                parks: { visible: true, stroke: '#859900', width: 0, fill: '#859900', fillEnabled: true, hatched: true, hatchStyle: 'text', hatchText: 'TREE', hatchScale: 1.2, hatchColor: '#22863a' },
+                railways: { visible: true, stroke: '#586e75', width: 1.2, fill: 'none', fillEnabled: false },
+                industrial: { visible: false }
             }
         },
         gold: {
             style: 'standard',
             bg: '#000000',
             layers: {
-                buildings: { stroke: '#d4af37', width: 1.2, fill: '#d4af37', fillEnabled: true, hatched: false },
-                water: { stroke: '#111111', width: 2, fill: '#111111', fillEnabled: true, hatched: false },
-                streets: { stroke: '#d4af37', width: 0.5, fill: '#ffffff', fillEnabled: false, hatched: false },
-                parks: { stroke: '#d4af37', width: 0.3, fill: '#000000', fillEnabled: true, hatched: true },
-                railways: { stroke: '#d4af37', width: 0.5, fill: '#000000', fillEnabled: false, hatched: false },
-                industrial: { visible: false, stroke: '#d4af37', width: 0.5, fill: '#000000', fillEnabled: false, hatched: false }
+                buildings: { visible: true, stroke: '#d4af37', width: 1.2, fill: '#d4af37', fillEnabled: true, hatched: true, hatchStyle: 'lines', hatchScale: 0.5, hatchRotation: 0, hatchColor: '#000000', hatchWidth: 0.8 },
+                water: { visible: true, stroke: '#111111', width: 2, fill: '#000000', fillEnabled: true, hatched: false },
+                streets: { visible: true, stroke: '#d4af37', width: 0.5, fill: '#ffffff', fillEnabled: false },
+                parks: { visible: true, stroke: '#d4af37', width: 0.3, fill: '#000000', fillEnabled: true, hatched: true, hatchStyle: 'squares', hatchScale: 0.8, hatchColor: '#d4af37' },
+                railways: { visible: true, stroke: '#d4af37', width: 0.5, fill: '#000000', fillEnabled: false },
+                industrial: { visible: false }
             }
         }
     };
