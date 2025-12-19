@@ -41,7 +41,7 @@ body {
     position: absolute;
     top: 2rem;
     left: 2rem;
-    width: 340px;
+    width: 520px;
     background: var(--bg-panel);
     backdrop-filter: blur(var(--backdrop));
     -webkit-backdrop-filter: blur(var(--backdrop));
@@ -69,7 +69,7 @@ body {
 }
 
 .control-panel.collapsed {
-    transform: translateX(-360px);
+    transform: translateX(-560px);
 }
 
 .collapse-toggle {
@@ -988,4 +988,231 @@ input[type=color]::-webkit-color-swatch-wrapper {
 input[type=color]::-webkit-color-swatch {
     border: 1px solid var(--border);
     border-radius: 6px;
+}
+
+/* Compact Layer Grid Styles */
+.layer-headers {
+    display: grid;
+    grid-template-columns: 100px 70px 60px 40px 1fr;
+    gap: 8px;
+    padding: 0 10px 8px 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    margin-bottom: 10px;
+}
+
+.col-header {
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    text-align: center;
+}
+
+.col-header.left {
+    text-align: left;
+}
+
+.layer-compact-row {
+    display: grid;
+    grid-template-columns: 100px 70px 60px 40px 1fr;
+    gap: 8px;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 6px;
+    padding: 6px 10px;
+    margin-bottom: 6px;
+    transition: all 0.2s;
+}
+
+.layer-compact-row:hover {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
+.layer-name-col {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.layer-stroke-col,
+.layer-fill-col,
+.layer-hatch-col {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+}
+
+.layer-laser-col {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* Compact Inputs */
+.input-compact {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: white;
+    border-radius: 4px;
+    padding: 2px 4px;
+    font-size: 0.8rem;
+    height: 24px;
+}
+
+.input-compact:focus {
+    border-color: var(--primary);
+    outline: none;
+}
+
+.mini-color {
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    border: none;
+    background: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.mini-color::-webkit-color-swatch-wrapper {
+    padding: 0;
+}
+
+.mini-color::-webkit-color-swatch {
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+}
+
+.mini-num {
+    width: 40px;
+    text-align: center;
+}
+
+.mini-select {
+    width: 100%;
+    padding: 0 4px;
+    /* Tight padding */
+    height: 24px;
+    font-size: 0.75rem;
+}
+
+/* Checkbox specific styling for compactness */
+.compact-check {
+    margin-top: 0;
+    margin-right: 0;
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+}
+
+/* Hatch settings expander toggles */
+.hatch-settings-trigger {
+    cursor: pointer;
+    opacity: 0.6;
+    transition: opacity 0.2s;
+    background: none;
+    border: none;
+    color: white;
+    padding: 2px;
+}
+
+.hatch-settings-trigger:hover,
+.hatch-settings-trigger.active {
+    opacity: 1;
+    color: var(--primary);
+}
+
+.layer-extended-settings {
+    grid-column: 1 / -1;
+    background: rgba(0, 0, 0, 0.2);
+    margin-top: 6px;
+    padding: 8px;
+    border-radius: 4px;
+    display: none;
+}
+
+.layer-extended-settings.visible {
+    display: grid;
+    gap: 8px;
+    grid-template-columns: 1fr 1fr;
+}
+
+[data-tooltip] {
+    position: relative;
+}
+
+/* Status Terminal & Progress */
+.status-terminal {
+    background: #000;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    padding: 8px;
+    font-family: 'Source Code Pro', monospace;
+    font-size: 0.7rem;
+    color: #33ff33;
+    height: 80px;
+    overflow-y: auto;
+    margin-bottom: 8px;
+    display: flex;
+    flex-direction: column-reverse;
+    /* New messages at bottom/top depending on pref, usually scrolling up */
+}
+
+.status-terminal::-webkit-scrollbar {
+    width: 4px;
+}
+
+.status-terminal::-webkit-scrollbar-thumb {
+    background: #333;
+}
+
+.terminal-line {
+    margin-bottom: 2px;
+    white-space: pre-wrap;
+    word-break: break-all;
+}
+
+.terminal-line.error {
+    color: #ff3333;
+}
+
+.terminal-line.warn {
+    color: #ffff33;
+}
+
+.terminal-line.info {
+    color: #33ccff;
+}
+
+.progress-container {
+    width: 100%;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-bottom: 4px;
+}
+
+.progress-bar {
+    height: 100%;
+    background: var(--primary);
+    width: 0;
+    transition: width 0.2s ease;
+    box-shadow: 0 0 10px var(--primary);
+}
+
+.status-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    font-family: 'Source Code Pro', monospace;
 }

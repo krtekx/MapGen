@@ -46,6 +46,49 @@ const state = {
     }
 };
 
+const StatusLog = {
+    term: null,
+    bar: null,
+    mem: null,
+    zoom: null,
+    init() {
+        this.term = document.getElementById('status-terminal');
+        this.bar = document.getElementById('progress-bar');
+        this.mem = document.getElementById('status-memory');
+        this.zoom = document.getElementById('status-zoom');
+    },
+    log(msg, type = '') {
+        if (!this.term) this.init();
+        if (!this.term) return; // fail safe
+        const line = document.createElement('div');
+        line.className = `terminal-line ${type}`;
+        line.textContent = `> ${msg}`;
+        this.term.insertBefore(line, this.term.firstChild); // Prepend
+        if (this.term.children.length > 50) this.term.lastChild.remove();
+    },
+    progress(percent) {
+        if (!this.bar) this.init();
+        if (!this.bar) return;
+        this.bar.style.width = `${percent}%`;
+    },
+    updateMeta() {
+        if (!this.zoom) this.init();
+        if (!this.zoom) return;
+        const z = state.map ? state.map.getZoom() : '--';
+        this.zoom.textContent = `Zoom: ${z}`;
+
+        // Estimate memory
+        let size = 0;
+        if (state.vectorData) {
+            try {
+                size = JSON.stringify(state.vectorData).length;
+            } catch (e) { }
+        }
+        const mb = (size / 1024 / 1024).toFixed(2);
+        this.mem.textContent = `Mem: ${mb} MB`;
+    }
+};
+
 document.addEventListener('DOMContentLoaded', () => {
     initMap();
     setupControls();
@@ -622,21 +665,25 @@ async function fetchAndRenderVectors() {
     if (btn.disabled) return;
     btn.disabled = true;
 
+    // Update zoom display
+    StatusLog.updateMeta();
+
     try {
         const bounds = state.map.getBounds();
         const currentZoom = state.map.getZoom();
 
         // Safety: Prevent fetching if zoom is too low (area too big)
         if (currentZoom < 15) {
-            // If manual activation (not auto-refetch), we might want to inform the user
-            // But valid flow: User toggles ON -> We zoom them IN -> fetch happens.
-            // Or user zooms OUT -> We stop fetching or clear.
+            StatusLog.log(`Zoom level ${currentZoom} too low.`, 'warn');
+            StatusLog.log(`Please zoom in to at least 15 (Vector Mode).`, 'warn');
+            StatusLog.progress(0);
 
-            // Strategy: If zoom < 15, we do NOT fetch/render vectors to avoid freeze/crash.
             // We can clear existing ones to indicate "out of range".
-            console.log("Zoom too low for vectors, clearing.");
             clearVectorLayers();
             state.tileLayer.setOpacity(1); // Show raster again
+
+            // We do NOT turn off vector mode toggle, just show warning.
+            // But we must stop the fetch.
             return;
         }
 
@@ -661,6 +708,9 @@ async function fetchAndRenderVectors() {
             out geom;
         `;
 
+        StatusLog.log("Starting Query...", "info");
+        StatusLog.progress(20);
+
         console.log("Fetching vector data...");
         const response = await fetch('https://overpass-api.de/api/interpreter', {
             method: 'POST',
@@ -669,21 +719,30 @@ async function fetchAndRenderVectors() {
 
         if (!response.ok) throw new Error("Overpass API request failed");
 
+        StatusLog.log("Data Received. Parsing...", "info");
+        StatusLog.progress(60);
+
         const data = await response.json();
         // Convert to GeoJSON
         state.vectorData = osmtogeojson(data);
         console.log("GeoJSON parsed:", state.vectorData);
 
+        StatusLog.log(`Parsed ${data.elements ? data.elements.length : 0} elements.`, "info");
+        StatusLog.progress(80);
+        StatusLog.updateMeta();
+
         renderVectorLayers();
+        StatusLog.log("Render Complete.", "info");
+        StatusLog.progress(100);
+        setTimeout(() => StatusLog.progress(0), 2000);
 
     } catch (e) {
         console.error("Vector fetch failed:", e);
-        alert("Failed to load vector data. Try a smaller area.");
-        // Revert
-        document.getElementById('vector-mode-toggle').checked = false;
-        state.vectorMode = false;
-        state.tileLayer.setOpacity(1);
-        document.getElementById('layer-toggles').classList.add('disabled');
+        StatusLog.log(`Error: ${e.message}`, "error");
+        StatusLog.progress(0);
+        // Do not turn off toggle automatically, just user know it failed
+        // Revert raster visibility if it failed completely
+        if (!state.vectorData) state.tileLayer.setOpacity(1);
     } finally {
         btn.disabled = false;
     }
